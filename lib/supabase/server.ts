@@ -17,7 +17,10 @@ export async function createClient() {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
             )
-          } catch {}
+          } catch {
+            // cookieStore.set() throws in Server Components (read-only context).
+            // The empty catch is intentional — the Supabase SSR client handles this gracefully.
+          }
         },
       },
     }
