@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/PageHeader'
 import { mockWines } from '@/lib/mock-data'
-import { ArrowLeft, Wine as WineIcon, Star, MapPin } from 'lucide-react'
+import { ArrowLeft, Star, MapPin } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 interface WineDetailPageProps {

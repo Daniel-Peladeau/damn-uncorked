@@ -26,7 +26,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
     { href: '/about', label: 'About', icon: Info },
   ]
 
-  const isActive = (href: string) => currentPath === href
+  const isActive = (href: string) => currentPath === href || currentPath.startsWith(href + '/')
 
   return (
     <>
