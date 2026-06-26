@@ -3,7 +3,7 @@
 A private wine logging, rating, and research site for Dan & Madison.
 
 ## Stack
-- **Framework:** Next.js 15+ (App Router) + TypeScript (strict mode)
+- **Framework:** Next.js 16 (App Router) + TypeScript (strict mode)
 - **Styling:** Tailwind CSS + shadcn/ui (Nova preset, Lucide icons, Geist font)
 - **Database:** Supabase — Postgres + PostGIS + Auth + Storage
 - **Hosting:** Vercel (Hobby — non-commercial)
@@ -85,6 +85,12 @@ Required in `.env.local` (never commit this file):
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
+
+## Next.js 16 Conventions
+- **Middleware file is `proxy.ts`** (not `middleware.ts`) — Next.js 16 renamed the convention; `middleware.ts` is deprecated and will log a warning
+- The exported function must be named `proxy` (or be a default export): `export async function proxy(request: NextRequest)`
+- `middleware.ts` still works but do not create it — if both files exist Next.js throws an error
+- This was verified from `node_modules/next/dist/esm/lib/constants.js`: `PROXY_FILENAME = 'proxy'`
 
 ## Do Not
 - Do not push `.env.local` or any file containing secrets to GitHub
