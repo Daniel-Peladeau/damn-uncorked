@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
   LayoutDashboard,
@@ -9,8 +10,10 @@ import {
   Info,
   Menu,
   X,
+  LogOut,
 } from 'lucide-react'
 import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 interface SidebarProps {
   currentPath: string
@@ -18,6 +21,7 @@ interface SidebarProps {
 
 export function Sidebar({ currentPath }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const router = useRouter()
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -27,6 +31,13 @@ export function Sidebar({ currentPath }: SidebarProps) {
   ]
 
   const isActive = (href: string) => currentPath === href || currentPath.startsWith(href + '/')
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.refresh()
+    router.push('/auth/signin')
+  }
 
   return (
     <>
@@ -81,9 +92,17 @@ export function Sidebar({ currentPath }: SidebarProps) {
           ))}
         </nav>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-border text-xs text-muted-foreground">
-          <p>v0.1.0</p>
+        {/* Footer — sign out */}
+        <div className="p-4 border-t border-border">
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            onClick={handleSignOut}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign out
+          </Button>
+          <p className="mt-2 px-2 text-xs text-muted-foreground">v0.1.0</p>
         </div>
       </aside>
     </>
