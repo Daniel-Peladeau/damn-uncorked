@@ -92,3 +92,29 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 - Do not add a separate Express/Fastify backend — use Next.js API routes
 - Do not store image binaries in Postgres — store URLs only
 - Do not use `SELECT *` in queries — always specify columns
+
+## Current Status (as of project start)
+
+### Completed
+- Next.js scaffolded with TypeScript, Tailwind, shadcn/ui (Nova preset)
+- GitHub repo created: github.com/Daniel-Peladeau/damn-uncorked
+- CLAUDE.md committed to repo
+- Supabase project created (US East), PostGIS enabled
+- Full database schema run successfully — all tables and views created
+- Supabase client helpers created in lib/supabase/client.ts and server.ts
+- .env.local configured with Supabase URL and anon key
+
+### Next Steps (in order)
+1. Set up Google OAuth in Supabase dashboard
+2. Configure Supabase Auth redirect URLs
+3. Build sign-in page in Next.js
+4. Add auth middleware to protect routes
+5. Connect Vercel and add env vars to dashboard
+6. Build wine entry form (first real feature)
+
+### Key Decisions for Claude Code to Know
+- Two users only: Dan and Madison — emails stored in allowed_users table
+- Ratings: appearance, nose, palate, finish, value (each 1–5) + overall (1–10)
+- Wine focus: whites, rosés, sparkling primarily
+- Dan and Madison log independent reviews of the same bottle
+- Never push directly to main — always use feature branches and PRs
