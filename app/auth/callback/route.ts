@@ -7,21 +7,18 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code)
 
-    if (!error) {
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-      if (userError || !user?.email) {
-        await supabase.auth.signOut()
-        return NextResponse.redirect(`${origin}/auth/signin?error=auth_failed`)
-      }
-
-      const { data: allowed } = await supabase
+    if (!error && user?.email) {
+      const { data: allowed, error: allowlistError } = await supabase
         .from('allowed_users')
         .select('email')
         .eq('email', user.email)
         .single()
+
+      if (allowlistError && allowlistError.code !== 'PGRST116') {
+        return NextResponse.redirect(`${origin}/auth/signin?error=auth_failed`)
+      }
 
       if (!allowed) {
         await supabase.auth.signOut()

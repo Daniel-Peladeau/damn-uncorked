@@ -35,6 +35,7 @@ export function Sidebar({ currentPath }: SidebarProps) {
   async function handleSignOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
+    router.refresh()
     router.push('/auth/signin')
   }
 

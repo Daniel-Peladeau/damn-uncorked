@@ -10,11 +10,11 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 
 - [ ] Set up Google OAuth provider in Supabase dashboard
 - [ ] Configure allowed redirect URLs in Supabase (localhost:3000 + future Vercel URL)
-- [ ] Build `/auth/signin` page — Google OAuth button + magic link fallback
-- [ ] Build `/auth/callback` route handler — exchanges OAuth code for session
-- [ ] Write `middleware.ts` — protect all routes, redirect unauthenticated users to `/auth/signin`
-- [ ] On sign-in, verify user email against `allowed_users` table — reject if not listed
-- [ ] Add sign-out button to sidebar footer
+- [x] Build `/auth/signin` page — Google OAuth button + magic link fallback
+- [x] Build `/auth/callback` route handler — exchanges OAuth code for session
+- [x] Write `proxy.ts` — protect all routes, redirect unauthenticated users to `/auth/signin` (Next.js 16 uses `proxy.ts` not `middleware.ts`)
+- [x] On sign-in, verify user email against `allowed_users` table — reject if not listed
+- [x] Add sign-out button to sidebar footer
 - [ ] Connect GitHub repo to Vercel, add env vars to Vercel dashboard
 - [ ] Add production URL to Supabase redirect allowlist + Google OAuth console
 
