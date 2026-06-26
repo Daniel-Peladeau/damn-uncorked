@@ -1,24 +1,5 @@
-export type Wine = {
-  id: string
-  name: string
-  winery: string
-  vintage: number
-  region: string
-  country: string
-  grapes: string[]
-  type: 'white' | 'rosé' | 'sparkling' | 'red' | 'dessert'
-  ratings: {
-    appearance?: number
-    nose?: number
-    palate?: number
-    finish?: number
-    value?: number
-    overall?: number
-  }
-  tastingNotes?: string
-  foodPairing?: string
-  wouldBuyAgain?: boolean
-}
+export type { Wine } from '@/lib/types/wine'
+import type { Wine } from '@/lib/types/wine'
 
 export const mockWines: Wine[] = [
   {

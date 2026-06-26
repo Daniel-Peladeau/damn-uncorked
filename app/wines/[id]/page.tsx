@@ -6,11 +6,11 @@ import { ArrowLeft, Wine as WineIcon, Star, MapPin } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 interface WineDetailPageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
-export default function WineDetailPage({ params }: WineDetailPageProps) {
-  const { id } = params
+export default async function WineDetailPage({ params }: WineDetailPageProps) {
+  const { id } = await params
   const wine = mockWines.find((w) => w.id === id)
 
   if (!wine) {

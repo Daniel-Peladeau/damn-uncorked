@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Wine as WineType } from '@/lib/mock-data'
+import type { Wine as WineType } from '@/lib/types/wine'
 import { Wine, Star } from 'lucide-react'
 
 interface WineCardProps {
