@@ -2,14 +2,26 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/PageHeader'
 import { WineCard } from '@/components/WineCard'
-import { mockWines } from '@/lib/mock-data'
+import { getWinesForUser } from '@/lib/supabase/queries'
 import { Plus } from 'lucide-react'
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  const wines = await getWinesForUser()
+
   // Get top 3 wines sorted by rating
-  const topWines = [...mockWines]
+  const topWines = [...wines]
     .sort((a, b) => (b.ratings.overall || 0) - (a.ratings.overall || 0))
     .slice(0, 3)
+
+  // A fresh sign-in (or one with no reviews yet) has no rated wines — guard
+  // against dividing by zero instead of rendering "NaN/10".
+  const ratedWines = wines.filter((w) => w.ratings.overall)
+  const averageRating = ratedWines.length
+    ? (
+        ratedWines.reduce((acc, w) => acc + (w.ratings.overall ?? 0), 0) /
+        ratedWines.length
+      ).toFixed(1)
+    : null
 
   return (
     <div className="space-y-8">
@@ -51,9 +63,9 @@ export default function Dashboard() {
             experiences, and build your collection.
           </p>
           <p>
-            Whether you're interested in whites, rosés, sparkling wines, or
+            Whether you&apos;re interested in whites, rosés, sparkling wines, or
             exploring other varieties, log every bottle and remember what you
-            loved (or didn't).
+            loved (or didn&apos;t).
           </p>
           <div className="pt-4">
             <Link href="/about">
@@ -68,23 +80,19 @@ export default function Dashboard() {
         <div className="rounded-lg border border-border bg-card p-6">
           <div className="text-sm text-muted-foreground">Total Wines</div>
           <div className="mt-2 text-3xl font-bold text-foreground">
-            {mockWines.length}
+            {wines.length}
           </div>
         </div>
         <div className="rounded-lg border border-border bg-card p-6">
           <div className="text-sm text-muted-foreground">Average Rating</div>
           <div className="mt-2 text-3xl font-bold text-foreground">
-            {(
-              mockWines.reduce((acc, w) => acc + (w.ratings.overall || 0), 0) /
-              mockWines.filter((w) => w.ratings.overall).length
-            ).toFixed(1)}
-            /10
+            {averageRating ? `${averageRating}/10` : '—'}
           </div>
         </div>
         <div className="rounded-lg border border-border bg-card p-6">
           <div className="text-sm text-muted-foreground">Would Buy Again</div>
           <div className="mt-2 text-3xl font-bold text-foreground">
-            {mockWines.filter((w) => w.wouldBuyAgain).length}
+            {wines.filter((w) => w.wouldBuyAgain).length}
           </div>
         </div>
       </div>
