@@ -27,7 +27,7 @@ export default function AboutPage() {
           </h2>
           <p>
             We specialize in whites, rosés, and sparkling wines—though all
-            varieties are welcome. Whether you're exploring a Sauvignon Blanc
+            varieties are welcome. Whether you&apos;re exploring a Sauvignon Blanc
             from New Zealand, a Prosecco from Italy, or a Champagne from
             France, log every bottle and remember what you loved.
           </p>
@@ -52,7 +52,7 @@ export default function AboutPage() {
             </li>
             <li>
               <strong>Explore:</strong> View your full collection and revisit
-              wines you've logged
+              wines you&apos;ve logged
             </li>
             <li>
               <strong>Map:</strong> See all your wineries plotted
