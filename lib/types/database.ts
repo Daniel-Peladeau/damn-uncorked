@@ -10,7 +10,10 @@
 // queried elsewhere in the app.
 import type { WineType } from '@/lib/types/wine'
 
-export type GrapeColor = 'white' | 'rosé' | 'sparkling' | 'other'
+// Grape skin color, not the wine type enum — 'sparkling' isn't a grape color
+// and 'red' (the most common one) was missing from an earlier copy-paste of
+// WineType. Like the rest of this file, unverified against the live schema.
+export type GrapeColor = 'white' | 'red' | 'rosé' | 'other'
 
 export interface Database {
   public: {

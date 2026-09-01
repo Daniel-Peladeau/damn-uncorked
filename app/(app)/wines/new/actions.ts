@@ -39,17 +39,34 @@ function getRating(formData: FormData, key: string, min: number, max: number): n
   return parsed
 }
 
-// ilike() treats "%", "_", and "*" as wildcards ("*" is PostgREST's alias for
-// "%"), and "\" as its escape character — escape backslashes first (so we
-// don't double-escape the escapes we add), then the wildcard characters, so a
-// name containing any of them is matched literally rather than as a pattern.
+// ilike() treats "%" and "_" as wildcards, and "\" as its escape character —
+// escape backslashes first (so we don't double-escape the escapes we add),
+// then the wildcard characters, so a name containing either is matched
+// literally rather than as a pattern.
+//
+// KNOWN LIMITATION: PostgREST also does its own "*" -> "%" substitution on
+// the raw pattern string, independently of (and before) Postgres's ILIKE
+// backslash-escaping. So escaping "*" here doesn't help — escapeIlikePattern
+// would turn "Cab*" into "Cab\*", PostgREST rewrites that to "Cab\%", and
+// Postgres ILIKE then reads "\%" as an escaped literal "%", not the original
+// "*". There's no way to preserve a literal "*" through `.ilike()` from the
+// client side. Net effect: a name containing "*" will never match its own
+// previously-inserted row on lookup, so it takes the "create" branch every
+// time — a duplicate row, same low-severity failure mode as the accepted
+// find-or-create race condition elsewhere in this file, not a crash.
 function escapeIlikePattern(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/[%_*]/g, (match) => `\\${match}`)
+  return value.replace(/\\/g, '\\\\').replace(/[%_]/g, (match) => `\\${match}`)
 }
+
+// Shown to the user for any database failure — the real error (with table/
+// column/constraint detail from Postgrest) is logged server-side via
+// console.error instead of being sent to the client, since raw DB error text
+// isn't something a user-facing form should expose.
+const GENERIC_SAVE_ERROR = 'Something went wrong saving this wine. Please try again.'
 
 type FindOrCreateResult<Row extends { id: string }> =
   | { ok: true; row: Row; created: boolean }
-  | { ok: false; errorMessage: string }
+  | { ok: false }
 
 type LookupResult<Row> = { data: Row | null; error: PostgrestError | null }
 
@@ -59,7 +76,7 @@ type LookupResult<Row> = { data: Row | null; error: PostgrestError | null }
 // here — postgrest-js's insert/select typing doesn't hold up well when the
 // table name itself is a generic type parameter, so keeping the calls
 // concrete keeps this fully typed without resorting to `any`/type overrides.
-// `entityLabel`/`name` are only used to build error messages.
+// `entityLabel`/`name` are only used for server-side log context.
 //
 // NOTE (accepted race condition): this is a select-then-insert, not an atomic
 // upsert, so two near-simultaneous submissions for a brand-new name could
@@ -79,7 +96,8 @@ async function findOrCreateByName<Row extends { id: string }>(
   const { data: existing, error: lookupError } = await lookup()
 
   if (lookupError) {
-    return { ok: false, errorMessage: `Failed to look up ${entityLabel} "${name}": ${lookupError.message}` }
+    console.error(`Failed to look up ${entityLabel} "${name}":`, lookupError)
+    return { ok: false }
   }
 
   if (existing) {
@@ -89,10 +107,8 @@ async function findOrCreateByName<Row extends { id: string }>(
   const { data: created, error: insertError } = await create()
 
   if (insertError || !created) {
-    return {
-      ok: false,
-      errorMessage: `Failed to create ${entityLabel} "${name}": ${insertError?.message ?? 'unknown error'}`,
-    }
+    console.error(`Failed to create ${entityLabel} "${name}":`, insertError)
+    return { ok: false }
   }
 
   return { ok: true, row: created, created: true }
@@ -214,7 +230,7 @@ export async function createWineEntry(
   )
 
   if (!wineryResult.ok) {
-    return { error: wineryResult.errorMessage }
+    return { error: GENERIC_SAVE_ERROR }
   }
   const wineryId = wineryResult.row.id
 
@@ -230,7 +246,8 @@ export async function createWineEntry(
         .eq('id', wineryId)
 
       if (wineryUpdateError) {
-        return { error: `Failed to update winery details: ${wineryUpdateError.message}` }
+        console.error(`Failed to update winery "${wineryName}" details:`, wineryUpdateError)
+        return { error: GENERIC_SAVE_ERROR }
       }
     }
   }
@@ -251,7 +268,7 @@ export async function createWineEntry(
   )
 
   if (!wineResult.ok) {
-    return { error: wineResult.errorMessage }
+    return { error: GENERIC_SAVE_ERROR }
   }
   const wineId = wineResult.row.id
 
@@ -261,102 +278,110 @@ export async function createWineEntry(
     const { error: wineUpdateError } = await supabase.from('wines').update({ type }).eq('id', wineId)
 
     if (wineUpdateError) {
-      return { error: `Failed to update wine type: ${wineUpdateError.message}` }
+      console.error(`Failed to update wine "${name}" type:`, wineUpdateError)
+      return { error: GENERIC_SAVE_ERROR }
     }
   }
 
-  // --- Find-or-create grapes, then link to the wine ---------------------------
-  // Each grape's find-or-create + link is independent of the others, so run
-  // them concurrently instead of one at a time.
-  const grapeLinkErrors = await Promise.all(
-    grapeNames.map(async (grapeName): Promise<string | null> => {
-      const grapeResult = await findOrCreateByName<{ id: string }>(
-        'grape',
-        grapeName,
-        () =>
-          supabase
-            .from('grapes')
-            .select('id')
-            .ilike('name', escapeIlikePattern(grapeName))
-            .limit(1)
-            .maybeSingle(),
-        () =>
-          // `color` is a real, documented schema field (CLAUDE.md) and not
-          // confirmed nullable — the form doesn't collect a color for
-          // newly-typed-in grapes yet, so default to 'other' rather than
-          // risk a NOT NULL failure on every auto-created grape.
-          supabase.from('grapes').insert({ name: grapeName, color: 'other' }).select('id').single()
-      )
+  // --- Find-or-create grapes+links, and find-or-create the vintage, together ---
+  // Neither depends on the other (grapes need only wineId; the vintage needs
+  // wineId and the already-validated vintage year), so run them concurrently
+  // rather than the vintage waiting on the entire grape loop to finish.
+  const [grapeHadError, vintageResult] = await Promise.all([
+    // Each grape's find-or-create + link is independent of the others too, so
+    // run them concurrently with each other as well.
+    Promise.all(
+      grapeNames.map(async (grapeName): Promise<boolean> => {
+        const grapeResult = await findOrCreateByName<{ id: string }>(
+          'grape',
+          grapeName,
+          () =>
+            supabase
+              .from('grapes')
+              .select('id')
+              .ilike('name', escapeIlikePattern(grapeName))
+              .limit(1)
+              .maybeSingle(),
+          () =>
+            // `color` is a real, documented schema field (CLAUDE.md) and not
+            // confirmed nullable — the form doesn't collect a color for
+            // newly-typed-in grapes yet, so default to 'other' rather than
+            // risk a NOT NULL failure on every auto-created grape.
+            supabase.from('grapes').insert({ name: grapeName, color: 'other' }).select('id').single()
+        )
 
-      if (!grapeResult.ok) {
-        return grapeResult.errorMessage
-      }
-      const grapeId = grapeResult.row.id
+        if (!grapeResult.ok) {
+          return true
+        }
+        const grapeId = grapeResult.row.id
 
-      // Reusing an existing wine also means this wine_grapes pairing may
-      // already exist from a prior vintage's submission — skip the insert if
-      // so, rather than erroring on the (presumed) unique (wine_id, grape_id)
-      // constraint or creating a duplicate row if none exists.
-      const { data: existingWineGrape, error: wineGrapeLookupError } = await supabase
-        .from('wine_grapes')
-        .select('wine_id')
-        .eq('wine_id', wineId)
-        .eq('grape_id', grapeId)
-        .limit(1)
-        .maybeSingle()
+        // Reusing an existing wine also means this wine_grapes pairing may
+        // already exist from a prior vintage's submission — skip the insert
+        // if so, rather than erroring on the (presumed) unique
+        // (wine_id, grape_id) constraint or creating a duplicate row.
+        const { data: existingWineGrape, error: wineGrapeLookupError } = await supabase
+          .from('wine_grapes')
+          .select('wine_id')
+          .eq('wine_id', wineId)
+          .eq('grape_id', grapeId)
+          .limit(1)
+          .maybeSingle()
 
-      if (wineGrapeLookupError) {
-        return `Failed to look up existing grape link for "${grapeName}": ${wineGrapeLookupError.message}`
-      }
+        if (wineGrapeLookupError) {
+          console.error(`Failed to look up existing grape link for "${grapeName}":`, wineGrapeLookupError)
+          return true
+        }
 
-      if (existingWineGrape) {
-        return null
-      }
+        if (existingWineGrape) {
+          return false
+        }
 
-      // percentage is intentionally left unset — the form doesn't collect a
-      // blend breakdown yet (see lib/types/database.ts for the nullability note).
-      const { error: wineGrapeError } = await supabase
-        .from('wine_grapes')
-        .insert({ wine_id: wineId, grape_id: grapeId })
+        // percentage is intentionally left unset — the form doesn't collect a
+        // blend breakdown yet (see lib/types/database.ts for the nullability note).
+        const { error: wineGrapeError } = await supabase
+          .from('wine_grapes')
+          .insert({ wine_id: wineId, grape_id: grapeId })
 
-      if (wineGrapeError) {
-        return `Failed to link grape "${grapeName}": ${wineGrapeError.message}`
-      }
+        if (wineGrapeError) {
+          console.error(`Failed to link grape "${grapeName}":`, wineGrapeError)
+          return true
+        }
 
-      return null
-    })
-  )
+        return false
+      })
+    ).then((results) => results.some(Boolean)),
 
-  const grapeError = grapeLinkErrors.find((error) => error !== null)
-  if (grapeError) {
-    return { error: grapeError }
+    // --- Find-or-create the vintage (same wine + year = shared by both users) --
+    findOrCreateByName<{ id: string }>(
+      'vintage',
+      String(vintage),
+      () =>
+        supabase
+          .from('wine_vintages')
+          .select('id')
+          .eq('wine_id', wineId)
+          .eq('vintage', vintage)
+          .limit(1)
+          .maybeSingle(),
+      () => supabase.from('wine_vintages').insert({ wine_id: wineId, vintage }).select('id').single()
+    ),
+  ])
+
+  if (grapeHadError) {
+    return { error: GENERIC_SAVE_ERROR }
   }
 
-  // --- Find-or-create the vintage (same wine + year = shared by both users) ---
-  const vintageResult = await findOrCreateByName<{ id: string }>(
-    'vintage',
-    String(vintage),
-    () =>
-      supabase
-        .from('wine_vintages')
-        .select('id')
-        .eq('wine_id', wineId)
-        .eq('vintage', vintage)
-        .limit(1)
-        .maybeSingle(),
-    () => supabase.from('wine_vintages').insert({ wine_id: wineId, vintage }).select('id').single()
-  )
-
   if (!vintageResult.ok) {
-    return { error: vintageResult.errorMessage }
+    return { error: GENERIC_SAVE_ERROR }
   }
   const vintageId = vintageResult.row.id
 
   // --- Create this user's review for the vintage -------------------------------
   // If this vintage already existed and this user already reviewed it, the
   // insert below will hit the "one row per user per wine_vintage" constraint
-  // and surface as a raw error message — editing an existing review is a
-  // separate, not-yet-built backlog item (Phase 3), so that's expected for now.
+  // and surface as the generic save-error message above — editing an existing
+  // review is a separate, not-yet-built backlog item (Phase 3), so that's
+  // expected for now.
   const { error: reviewInsertError } = await supabase.from('reviews').insert({
     wine_vintage_id: vintageId,
     user_id: user.id,
@@ -372,7 +397,8 @@ export async function createWineEntry(
   })
 
   if (reviewInsertError) {
-    return { error: `Failed to save review: ${reviewInsertError.message}` }
+    console.error('Failed to save review:', reviewInsertError)
+    return { error: GENERIC_SAVE_ERROR }
   }
 
   // The wine detail route (app/(app)/wines/[id]/page.tsx) is still backed by
