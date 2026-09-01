@@ -18,6 +18,7 @@ import {
 import { PageHeader } from '@/components/PageHeader'
 import { ArrowLeft } from 'lucide-react'
 import { createWineEntry, type AddWineFormState } from './actions'
+import { WINE_TYPES } from '@/lib/types/wine'
 
 const initialState: AddWineFormState = { error: null }
 
@@ -96,12 +97,11 @@ export default function AddWinePage() {
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="white">White</SelectItem>
-                  <SelectItem value="rosé">Rosé</SelectItem>
-                  <SelectItem value="sparkling">Sparkling</SelectItem>
-                  <SelectItem value="red">Red</SelectItem>
-                  <SelectItem value="dessert">Dessert</SelectItem>
-                  <SelectItem value="fortified">Fortified</SelectItem>
+                  {WINE_TYPES.map((wineType) => (
+                    <SelectItem key={wineType} value={wineType}>
+                      {wineType.charAt(0).toUpperCase() + wineType.slice(1)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

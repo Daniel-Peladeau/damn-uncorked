@@ -2,21 +2,12 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { WineType } from '@/lib/types/wine'
+import { WINE_TYPES, type WineType } from '@/lib/types/wine'
 import type { PostgrestError } from '@supabase/supabase-js'
 
 export type AddWineFormState = {
   error: string | null
 }
-
-const WINE_TYPES = [
-  'white',
-  'rosé',
-  'sparkling',
-  'red',
-  'dessert',
-  'fortified',
-] as const satisfies readonly WineType[]
 
 function isWineType(value: string): value is WineType {
   return (WINE_TYPES as readonly string[]).includes(value)
@@ -27,51 +18,64 @@ function getTrimmedString(formData: FormData, key: string): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+// Number("5e0") === 5 and Number.isInteger(5) === true, so a plain
+// Number()+isInteger check accepts scientific notation and other
+// non-canonical numeric strings. This action is a server entrypoint reachable
+// directly (not just through the UI's constrained inputs), so parsing is
+// restricted to a canonical integer string before converting.
+function parseCanonicalInteger(raw: string): number | null {
+  if (!/^-?\d+$/.test(raw)) return null
+  return Number(raw)
+}
+
 // The <Select> options in the UI already constrain ratings to 1-5/1-10, but
 // this action is a server entrypoint reachable directly (not just through
 // that UI), so the range/integer check has to be enforced here too.
 function getRating(formData: FormData, key: string, min: number, max: number): number | null {
   const raw = getTrimmedString(formData, key)
   if (raw.length === 0) return null
-  const parsed = Number(raw)
-  if (!Number.isInteger(parsed) || parsed < min || parsed > max) return null
+  const parsed = parseCanonicalInteger(raw)
+  if (parsed === null || parsed < min || parsed > max) return null
   return parsed
 }
 
-// ilike() treats "%" and "_" as wildcards, and "\" as its escape character —
-// escape backslashes first (so we don't double-escape the escapes we add),
-// then the wildcard characters, so a name containing any of them is matched
-// literally rather than as a pattern.
+// ilike() treats "%", "_", and "*" as wildcards ("*" is PostgREST's alias for
+// "%"), and "\" as its escape character — escape backslashes first (so we
+// don't double-escape the escapes we add), then the wildcard characters, so a
+// name containing any of them is matched literally rather than as a pattern.
 function escapeIlikePattern(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/[%_]/g, (match) => `\\${match}`)
+  return value.replace(/\\/g, '\\\\').replace(/[%_*]/g, (match) => `\\${match}`)
 }
 
-type FindOrCreateResult =
-  | { ok: true; id: string; created: boolean }
+type FindOrCreateResult<Row extends { id: string }> =
+  | { ok: true; row: Row; created: boolean }
   | { ok: false; errorMessage: string }
 
-type IdLookupResult = { data: { id: string } | null; error: PostgrestError | null }
+type LookupResult<Row> = { data: Row | null; error: PostgrestError | null }
 
-// Shared by the winery and grape flows below, which both resolve a row by a
-// case-insensitive name match, creating it if it doesn't exist yet. The
-// actual `.from(table)` calls stay at each call site (as callbacks) rather
-// than being parameterized by table name here — postgrest-js's insert/select
-// typing doesn't hold up well when the table name itself is a generic type
-// parameter, so keeping the calls concrete keeps this fully typed without
-// resorting to `any`/type overrides.
+// Shared by every "find a row by some filter, else create it" flow below
+// (winery, wine, grape, vintage). The actual `.from(table)` calls stay at
+// each call site (as callbacks) rather than being parameterized by table name
+// here — postgrest-js's insert/select typing doesn't hold up well when the
+// table name itself is a generic type parameter, so keeping the calls
+// concrete keeps this fully typed without resorting to `any`/type overrides.
+// `entityLabel`/`name` are only used to build error messages.
 //
 // NOTE (accepted race condition): this is a select-then-insert, not an atomic
 // upsert, so two near-simultaneous submissions for a brand-new name could
 // both miss the lookup and insert duplicate rows. With only two users on this
 // app that's unlikely enough to accept for now rather than adding an
 // `.upsert()`/unique-constraint dependency we can't verify against the
-// currently-paused database.
-async function findOrCreateByName(
+// currently-paused database. Every lookup below uses `.limit(1)` so that, if
+// a duplicate ever does exist, resolution degrades to "pick one" instead of
+// `.maybeSingle()` hard-erroring on >1 rows and permanently breaking every
+// future lookup for that name.
+async function findOrCreateByName<Row extends { id: string }>(
   entityLabel: string,
   name: string,
-  lookup: () => PromiseLike<IdLookupResult>,
-  create: () => PromiseLike<IdLookupResult>
-): Promise<FindOrCreateResult> {
+  lookup: () => PromiseLike<LookupResult<Row>>,
+  create: () => PromiseLike<LookupResult<Row>>
+): Promise<FindOrCreateResult<Row>> {
   const { data: existing, error: lookupError } = await lookup()
 
   if (lookupError) {
@@ -79,7 +83,7 @@ async function findOrCreateByName(
   }
 
   if (existing) {
-    return { ok: true, id: existing.id, created: false }
+    return { ok: true, row: existing, created: false }
   }
 
   const { data: created, error: insertError } = await create()
@@ -91,7 +95,7 @@ async function findOrCreateByName(
     }
   }
 
-  return { ok: true, id: created.id, created: true }
+  return { ok: true, row: created, created: true }
 }
 
 export async function createWineEntry(
@@ -114,9 +118,9 @@ export async function createWineEntry(
     return { error: 'Please select a valid wine type.' }
   }
 
-  const vintage = Number(vintageRaw)
   const currentYear = new Date().getFullYear()
-  if (!Number.isInteger(vintage) || vintage < 1900 || vintage > currentYear + 1) {
+  const vintage = parseCanonicalInteger(vintageRaw)
+  if (vintage === null || vintage < 1900 || vintage > currentYear + 1) {
     return { error: 'Please enter a valid vintage year.' }
   }
 
@@ -183,43 +187,43 @@ export async function createWineEntry(
   // can't be verified against the currently-paused database. Known follow-up.
 
   // --- Find-or-create winery (case-insensitive name match) -----------------
-  const wineryResult = await findOrCreateByName(
+  // Explicit type argument: TS can't reliably unify the row shape from two
+  // separate callback arguments via inference alone (it can silently fall
+  // back to the `{ id: string }` constraint instead), so pin it here rather
+  // than at every other call site.
+  const wineryResult = await findOrCreateByName<{
+    id: string
+    region: string | null
+    country: string | null
+  }>(
     'winery',
     wineryName,
     () =>
       supabase
         .from('wineries')
-        .select('id')
+        .select('id, region, country')
         .ilike('name', escapeIlikePattern(wineryName))
+        .limit(1)
         .maybeSingle(),
     () =>
       supabase
         .from('wineries')
         .insert({ name: wineryName, region, country })
-        .select('id')
+        .select('id, region, country')
         .single()
   )
 
   if (!wineryResult.ok) {
     return { error: wineryResult.errorMessage }
   }
-  const wineryId = wineryResult.id
+  const wineryId = wineryResult.row.id
 
   // The winery already existed — if the submitted region/country differ from
   // what's stored, treat the form as a correction rather than silently
   // discarding it.
   if (!wineryResult.created) {
-    const { data: currentWinery, error: wineryFetchError } = await supabase
-      .from('wineries')
-      .select('region, country')
-      .eq('id', wineryId)
-      .single()
-
-    if (wineryFetchError) {
-      return { error: `Failed to read existing winery details: ${wineryFetchError.message}` }
-    }
-
-    if (currentWinery.region !== region || currentWinery.country !== country) {
+    const current = wineryResult.row
+    if (current.region !== region || current.country !== country) {
       const { error: wineryUpdateError } = await supabase
         .from('wineries')
         .update({ region, country })
@@ -232,113 +236,121 @@ export async function createWineEntry(
   }
 
   // --- Find-or-create wine (same winery + name = same wine across vintages) ---
-  const { data: existingWine, error: wineLookupError } = await supabase
-    .from('wines')
-    .select('id')
-    .eq('winery_id', wineryId)
-    .ilike('name', escapeIlikePattern(name))
-    .maybeSingle()
+  const wineResult = await findOrCreateByName<{ id: string; type: WineType }>(
+    'wine',
+    name,
+    () =>
+      supabase
+        .from('wines')
+        .select('id, type')
+        .eq('winery_id', wineryId)
+        .ilike('name', escapeIlikePattern(name))
+        .limit(1)
+        .maybeSingle(),
+    () => supabase.from('wines').insert({ name, winery_id: wineryId, type }).select('id, type').single()
+  )
 
-  if (wineLookupError) {
-    return { error: `Failed to look up wine: ${wineLookupError.message}` }
+  if (!wineResult.ok) {
+    return { error: wineResult.errorMessage }
   }
+  const wineId = wineResult.row.id
 
-  let wineId: string
-  if (existingWine) {
-    wineId = existingWine.id
-  } else {
-    const { data: newWine, error: wineInsertError } = await supabase
-      .from('wines')
-      .insert({ name, winery_id: wineryId, type })
-      .select('id')
-      .single()
+  // The wine already existed — same "treat the form as a correction" handling
+  // as the winery block above, applied to the type this time.
+  if (!wineResult.created && wineResult.row.type !== type) {
+    const { error: wineUpdateError } = await supabase.from('wines').update({ type }).eq('id', wineId)
 
-    if (wineInsertError || !newWine) {
-      return { error: `Failed to create wine: ${wineInsertError?.message ?? 'unknown error'}` }
+    if (wineUpdateError) {
+      return { error: `Failed to update wine type: ${wineUpdateError.message}` }
     }
-    wineId = newWine.id
   }
 
   // --- Find-or-create grapes, then link to the wine ---------------------------
-  for (const grapeName of grapeNames) {
-    const grapeResult = await findOrCreateByName(
-      'grape',
-      grapeName,
-      () =>
-        supabase
-          .from('grapes')
-          .select('id')
-          .ilike('name', escapeIlikePattern(grapeName))
-          .maybeSingle(),
-      () => supabase.from('grapes').insert({ name: grapeName }).select('id').single()
-    )
+  // Each grape's find-or-create + link is independent of the others, so run
+  // them concurrently instead of one at a time.
+  const grapeLinkErrors = await Promise.all(
+    grapeNames.map(async (grapeName): Promise<string | null> => {
+      const grapeResult = await findOrCreateByName<{ id: string }>(
+        'grape',
+        grapeName,
+        () =>
+          supabase
+            .from('grapes')
+            .select('id')
+            .ilike('name', escapeIlikePattern(grapeName))
+            .limit(1)
+            .maybeSingle(),
+        () =>
+          // `color` is a real, documented schema field (CLAUDE.md) and not
+          // confirmed nullable — the form doesn't collect a color for
+          // newly-typed-in grapes yet, so default to 'other' rather than
+          // risk a NOT NULL failure on every auto-created grape.
+          supabase.from('grapes').insert({ name: grapeName, color: 'other' }).select('id').single()
+      )
 
-    if (!grapeResult.ok) {
-      return { error: grapeResult.errorMessage }
-    }
-    const grapeId = grapeResult.id
-
-    // Reusing an existing wine also means this wine_grapes pairing may
-    // already exist from a prior vintage's submission — skip the insert if
-    // so, rather than erroring on the (presumed) unique (wine_id, grape_id)
-    // constraint or creating a duplicate row if none exists.
-    const { data: existingWineGrape, error: wineGrapeLookupError } = await supabase
-      .from('wine_grapes')
-      .select('wine_id')
-      .eq('wine_id', wineId)
-      .eq('grape_id', grapeId)
-      .maybeSingle()
-
-    if (wineGrapeLookupError) {
-      return {
-        error: `Failed to look up existing grape link for "${grapeName}": ${wineGrapeLookupError.message}`,
+      if (!grapeResult.ok) {
+        return grapeResult.errorMessage
       }
-    }
+      const grapeId = grapeResult.row.id
 
-    if (existingWineGrape) {
-      continue
-    }
+      // Reusing an existing wine also means this wine_grapes pairing may
+      // already exist from a prior vintage's submission — skip the insert if
+      // so, rather than erroring on the (presumed) unique (wine_id, grape_id)
+      // constraint or creating a duplicate row if none exists.
+      const { data: existingWineGrape, error: wineGrapeLookupError } = await supabase
+        .from('wine_grapes')
+        .select('wine_id')
+        .eq('wine_id', wineId)
+        .eq('grape_id', grapeId)
+        .limit(1)
+        .maybeSingle()
 
-    // percentage is intentionally left unset — the form doesn't collect a
-    // blend breakdown yet (see lib/types/database.ts for the nullability note).
-    const { error: wineGrapeError } = await supabase
-      .from('wine_grapes')
-      .insert({ wine_id: wineId, grape_id: grapeId })
+      if (wineGrapeLookupError) {
+        return `Failed to look up existing grape link for "${grapeName}": ${wineGrapeLookupError.message}`
+      }
 
-    if (wineGrapeError) {
-      return { error: `Failed to link grape "${grapeName}": ${wineGrapeError.message}` }
-    }
+      if (existingWineGrape) {
+        return null
+      }
+
+      // percentage is intentionally left unset — the form doesn't collect a
+      // blend breakdown yet (see lib/types/database.ts for the nullability note).
+      const { error: wineGrapeError } = await supabase
+        .from('wine_grapes')
+        .insert({ wine_id: wineId, grape_id: grapeId })
+
+      if (wineGrapeError) {
+        return `Failed to link grape "${grapeName}": ${wineGrapeError.message}`
+      }
+
+      return null
+    })
+  )
+
+  const grapeError = grapeLinkErrors.find((error) => error !== null)
+  if (grapeError) {
+    return { error: grapeError }
   }
 
   // --- Find-or-create the vintage (same wine + year = shared by both users) ---
-  const { data: existingVintage, error: vintageLookupError } = await supabase
-    .from('wine_vintages')
-    .select('id')
-    .eq('wine_id', wineId)
-    .eq('vintage', vintage)
-    .maybeSingle()
+  const vintageResult = await findOrCreateByName<{ id: string }>(
+    'vintage',
+    String(vintage),
+    () =>
+      supabase
+        .from('wine_vintages')
+        .select('id')
+        .eq('wine_id', wineId)
+        .eq('vintage', vintage)
+        .limit(1)
+        .maybeSingle(),
+    () => supabase.from('wine_vintages').insert({ wine_id: wineId, vintage }).select('id').single()
+  )
 
-  if (vintageLookupError) {
-    return { error: `Failed to look up vintage: ${vintageLookupError.message}` }
+  if (!vintageResult.ok) {
+    return { error: vintageResult.errorMessage }
   }
-
-  let vintageId: string
-  if (existingVintage) {
-    vintageId = existingVintage.id
-  } else {
-    const { data: newVintage, error: vintageInsertError } = await supabase
-      .from('wine_vintages')
-      .insert({ wine_id: wineId, vintage })
-      .select('id')
-      .single()
-
-    if (vintageInsertError || !newVintage) {
-      return {
-        error: `Failed to create vintage: ${vintageInsertError?.message ?? 'unknown error'}`,
-      }
-    }
-    vintageId = newVintage.id
-  }
+  const vintageId = vintageResult.row.id
 
   // --- Create this user's review for the vintage -------------------------------
   // If this vintage already existed and this user already reviewed it, the
