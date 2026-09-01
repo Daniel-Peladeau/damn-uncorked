@@ -20,6 +20,15 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 
 ---
 
+## Phase 1.5 — Dependency Security (Dependabot)
+*36 open Dependabot alerts on `main` as of 2026-08-31 (18 high, 17 medium, 1 low). Clear before piling on more Phase 2+ code — see https://github.com/Daniel-Peladeau/damn-uncorked/security/dependabot.*
+
+- [ ] Upgrade `next` (currently 16.2.9) to the patched release — covers the bulk of the high/medium `next` alerts (Server Actions DoS/SSRF, Turbopack middleware bypass, rewrites SSRF, cache confusion, Image Optimization DoS, internal Server Function disclosure, unbounded Edge payload)
+- [ ] Run a dependency audit/update pass for transitive packages and re-check remaining alerts: `brace-expansion`, `fast-uri`, `ip-address`, `js-yaml`, `nanoid`, `postcss`, `sharp`, `undici`, `hono` / `@hono/node-server`
+- [ ] Re-run `gh api repos/Daniel-Peladeau/damn-uncorked/dependabot/alerts` (or check the Dependabot tab) after upgrades to confirm the count has dropped, and triage/dismiss any that don't apply to how this app actually uses the package
+
+---
+
 ## Phase 2 — Real Data (Replace Mock)
 *Requires Phase 1 complete. Work in this order — each depends on the previous.*
 
@@ -59,6 +68,7 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 ---
 
 ## Phase 6 — Polish & Deploy
+- [ ] Build public landing page at `/` (GitHub issue #11)
 - [ ] Mobile testing pass — all pages, sidebar, forms
 - [ ] Empty states — what shows when no wines are logged yet
 - [ ] Loading states — skeletons while Supabase data fetches
