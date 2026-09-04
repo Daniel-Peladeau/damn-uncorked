@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { WINE_TYPES, type WineType } from '@/lib/types/wine'
 import { getTrimmedString, parseCanonicalInteger, getRating } from '@/lib/reviews/validation'
+import { geocodeToLocationPatch } from '@/lib/geocoding'
 import type { PostgrestError } from '@supabase/supabase-js'
 
 export type AddWineFormState = {
@@ -196,12 +197,16 @@ export async function createWineEntry(
         .ilike('name', escapeIlikePattern(wineryName))
         .limit(1)
         .maybeSingle(),
-    () =>
-      supabase
+    async () => {
+      // Best-effort — a failed/empty geocode still lets the wine save, just
+      // without a map pin for this winery yet.
+      const locationPatch = await geocodeToLocationPatch(wineryName, region, country)
+      return supabase
         .from('wineries')
-        .insert({ name: wineryName, region, country })
+        .insert({ name: wineryName, region, country, ...locationPatch })
         .select('id, region, country')
         .single()
+    }
   )
 
   if (!wineryResult.ok) {
@@ -211,13 +216,18 @@ export async function createWineEntry(
 
   // The winery already existed — if the submitted region/country differ from
   // what's stored, treat the form as a correction rather than silently
-  // discarding it.
+  // discarding it. Re-geocode too, since a region/country correction means
+  // the stored location (if any) is now stale — geocodeToLocationPatch
+  // always returns a definite `location` (never omits it), so a failed
+  // re-geocode here clears the stale pin instead of silently keeping
+  // coordinates for the old region next to the newly-corrected text.
   if (!wineryResult.created) {
     const current = wineryResult.row
     if (current.region !== region || current.country !== country) {
+      const locationPatch = await geocodeToLocationPatch(wineryName, region, country)
       const { error: wineryUpdateError } = await supabase
         .from('wineries')
-        .update({ region, country })
+        .update({ region, country, ...locationPatch })
         .eq('id', wineryId)
 
       if (wineryUpdateError) {
@@ -228,18 +238,19 @@ export async function createWineEntry(
   }
 
   // --- Find-or-create wine (same winery + name = same wine across vintages) ---
-  const wineResult = await findOrCreateByName<{ id: string; type: WineType }>(
+  const wineResult = await findOrCreateByName<{ id: string; wine_type: WineType }>(
     'wine',
     name,
     () =>
       supabase
         .from('wines')
-        .select('id, type')
+        .select('id, wine_type')
         .eq('winery_id', wineryId)
         .ilike('name', escapeIlikePattern(name))
         .limit(1)
         .maybeSingle(),
-    () => supabase.from('wines').insert({ name, winery_id: wineryId, type }).select('id, type').single()
+    () =>
+      supabase.from('wines').insert({ name, winery_id: wineryId, wine_type: type }).select('id, wine_type').single()
   )
 
   if (!wineResult.ok) {
@@ -249,8 +260,11 @@ export async function createWineEntry(
 
   // The wine already existed — same "treat the form as a correction" handling
   // as the winery block above, applied to the type this time.
-  if (!wineResult.created && wineResult.row.type !== type) {
-    const { error: wineUpdateError } = await supabase.from('wines').update({ type }).eq('id', wineId)
+  if (!wineResult.created && wineResult.row.wine_type !== type) {
+    const { error: wineUpdateError } = await supabase
+      .from('wines')
+      .update({ wine_type: type })
+      .eq('id', wineId)
 
     if (wineUpdateError) {
       console.error(`Failed to update wine "${name}" type:`, wineUpdateError)
@@ -335,10 +349,11 @@ export async function createWineEntry(
           .from('wine_vintages')
           .select('id')
           .eq('wine_id', wineId)
-          .eq('vintage', vintage)
+          .eq('vintage_year', vintage)
           .limit(1)
           .maybeSingle(),
-      () => supabase.from('wine_vintages').insert({ wine_id: wineId, vintage }).select('id').single()
+      () =>
+        supabase.from('wine_vintages').insert({ wine_id: wineId, vintage_year: vintage }).select('id').single()
     ),
   ])
 

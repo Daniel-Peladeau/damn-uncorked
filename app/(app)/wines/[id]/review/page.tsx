@@ -22,7 +22,7 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
 
   const { data: vintage, error: vintageError } = await supabase
     .from('wine_vintages')
-    .select('id, vintage, wines ( name )')
+    .select('id, vintage_year, wines ( name )')
     .eq('id', id)
     .maybeSingle()
 
@@ -48,6 +48,11 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
   }
 
   return (
-    <ReviewForm vintageId={id} wineName={vintage.wines.name} vintageYear={vintage.vintage} existingReview={existingReview} />
+    <ReviewForm
+      vintageId={id}
+      wineName={vintage.wines.name}
+      vintageYear={vintage.vintage_year}
+      existingReview={existingReview}
+    />
   )
 }

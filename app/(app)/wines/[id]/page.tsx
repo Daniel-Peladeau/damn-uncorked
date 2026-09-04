@@ -10,7 +10,26 @@ interface WineDetailPageProps {
   params: Promise<{ id: string }>
 }
 
-type Review = Database['public']['Tables']['reviews']['Row']
+// Narrowed to just the columns the query below actually selects — the full
+// table Row also has currency/price_paid/purchase_location/tasted_on/
+// updated_at, which aren't fetched here.
+type Review = Pick<
+  Database['public']['Tables']['reviews']['Row'],
+  | 'id'
+  | 'wine_vintage_id'
+  | 'user_id'
+  | 'appearance'
+  | 'nose'
+  | 'palate'
+  | 'finish'
+  | 'value'
+  | 'overall'
+  | 'tasting_notes'
+  | 'food_pairing'
+  | 'would_buy_again'
+  | 'occasion'
+  | 'created_at'
+>
 
 const RATING_CATEGORIES = [
   { label: 'Appearance', key: 'appearance' as const },
@@ -43,10 +62,10 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
     .select(
       `
       id,
-      vintage,
+      vintage_year,
       wines (
         name,
-        type,
+        wine_type,
         wineries ( region, country ),
         wine_grapes ( grapes ( name ) )
       )
@@ -112,7 +131,10 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
         </Button>
       </Link>
 
-      <PageHeader title={wine.name} description={`${winery?.region ?? 'Unknown region'} • ${vintage.vintage}`} />
+      <PageHeader
+        title={wine.name}
+        description={`${winery?.region ?? 'Unknown region'} • ${vintage.vintage_year ?? 'Unknown vintage'}`}
+      />
 
       <div className="space-y-6">
         {/* Wine Details Card */}
@@ -147,7 +169,7 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
             )}
             <div>
               <p className="text-sm text-muted-foreground mb-2">Type</p>
-              <p className="capitalize font-medium text-foreground">{wine.type}</p>
+              <p className="capitalize font-medium text-foreground">{wine.wine_type}</p>
             </div>
           </div>
         </div>
@@ -229,7 +251,7 @@ function ReviewCard({
       </div>
 
       <div className="mb-6 flex items-end gap-2">
-        <div className="text-4xl font-bold text-foreground">{review.overall}</div>
+        <div className="text-4xl font-bold text-foreground">{review.overall ?? '—'}</div>
         <div className="mb-1 text-sm text-muted-foreground">/10 overall</div>
       </div>
       <div className="mb-6 flex items-center gap-1">
@@ -237,7 +259,7 @@ function ReviewCard({
           <Star
             key={i}
             className={`h-5 w-5 ${
-              i < Math.round(review.overall / 2) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
+              i < Math.round((review.overall ?? 0) / 2) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
             }`}
           />
         ))}
@@ -248,10 +270,10 @@ function ReviewCard({
           <div key={key}>
             <div className="flex items-center justify-between mb-1">
               <p className="text-sm text-muted-foreground">{label}</p>
-              <p className="text-sm font-medium text-foreground">{review[key]}/5</p>
+              <p className="text-sm font-medium text-foreground">{review[key] ?? '—'}/5</p>
             </div>
             <div className="h-2 rounded-full bg-secondary">
-              <div className="h-full rounded-full bg-primary" style={{ width: `${(review[key] / 5) * 100}%` }} />
+              <div className="h-full rounded-full bg-primary" style={{ width: `${((review[key] ?? 0) / 5) * 100}%` }} />
             </div>
           </div>
         ))}
@@ -292,7 +314,7 @@ function ReviewCard({
 // renders once both reviews exist, so `reviews` is always exactly the two
 // rows in practice, but the averaging itself works for any count.
 function CombinedRatingCard({ reviews }: { reviews: Review[] }) {
-  const combinedOverall = average(reviews.map((r) => r.overall))
+  const combinedOverall = average(reviews.map((r) => r.overall ?? 0))
 
   return (
     <div className="rounded-lg border border-border bg-card p-6">
@@ -315,7 +337,7 @@ function CombinedRatingCard({ reviews }: { reviews: Review[] }) {
 
       <div className="space-y-3">
         {RATING_CATEGORIES.map(({ label, key }) => {
-          const combinedValue = average(reviews.map((r) => r[key]))
+          const combinedValue = average(reviews.map((r) => r[key] ?? 0))
           return (
             <div key={key}>
               <div className="flex items-center justify-between mb-1">
