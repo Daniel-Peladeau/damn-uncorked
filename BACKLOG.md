@@ -23,43 +23,43 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 ## Phase 1.5 — Dependency Security (Dependabot)
 *36 open Dependabot alerts on `main` as of 2026-08-31 (18 high, 17 medium, 1 low). Clear before piling on more Phase 2+ code — see https://github.com/Daniel-Peladeau/damn-uncorked/security/dependabot.*
 
-- [ ] Upgrade `next` (currently 16.2.9) to the patched release — covers the bulk of the high/medium `next` alerts (Server Actions DoS/SSRF, Turbopack middleware bypass, rewrites SSRF, cache confusion, Image Optimization DoS, internal Server Function disclosure, unbounded Edge payload)
-- [ ] Run a dependency audit/update pass for transitive packages and re-check remaining alerts: `brace-expansion`, `fast-uri`, `ip-address`, `js-yaml`, `nanoid`, `postcss`, `sharp`, `undici`, `hono` / `@hono/node-server`
-- [ ] Re-run `gh api repos/Daniel-Peladeau/damn-uncorked/dependabot/alerts` (or check the Dependabot tab) after upgrades to confirm the count has dropped, and triage/dismiss any that don't apply to how this app actually uses the package
+- [x] Upgrade `next` (currently 16.2.9) to the patched release — covers the bulk of the high/medium `next` alerts (Server Actions DoS/SSRF, Turbopack middleware bypass, rewrites SSRF, cache confusion, Image Optimization DoS, internal Server Function disclosure, unbounded Edge payload)
+- [x] Run a dependency audit/update pass for transitive packages and re-check remaining alerts: `brace-expansion`, `fast-uri`, `ip-address`, `js-yaml`, `nanoid`, `postcss`, `sharp`, `undici`, `hono` / `@hono/node-server`
+- [x] Re-run `gh api repos/Daniel-Peladeau/damn-uncorked/dependabot/alerts` (or check the Dependabot tab) after upgrades to confirm the count has dropped, and triage/dismiss any that don't apply to how this app actually uses the package
 
 ---
 
 ## Phase 2 — Real Data (Replace Mock)
 *Requires Phase 1 complete. Work in this order — each depends on the previous.*
 
-- [ ] Wire up wine entry form — find-or-create winery, create wine + vintage + review rows
-- [ ] Wine list page — fetch real wines from Supabase (replace mockWines)
-- [ ] Wine detail page — fetch real wine + reviews from Supabase (replace mockWines.find)
-- [ ] Dashboard — real top wines, real stats (total, avg rating, would-buy-again count)
-- [ ] Remove `lib/mock-data.ts` once all pages use real data
+- [x] Wire up wine entry form — find-or-create winery, create wine + vintage + review rows
+- [x] Wine list page — fetch real wines from Supabase (replace mockWines)
+- [x] Wine detail page — fetch real wine + reviews from Supabase (replace mockWines.find)
+- [x] Dashboard — real top wines, real stats (total, avg rating, would-buy-again count)
+- [x] Remove `lib/mock-data.ts` once all pages use real data
 
 ---
 
 ## Phase 3 — Reviews
 *The core of the app — Dan and Madison each log independent reviews.*
 
-- [ ] Display both users' reviews on wine detail page (side by side or tabbed)
-- [ ] Show combined/averaged scores where both have reviewed
-- [ ] Edit existing review (update form pre-populated with saved values)
-- [ ] "Not yet reviewed" state — prompt the current user to add their review
+- [x] Display both users' reviews on wine detail page (side by side or tabbed)
+- [x] Show combined/averaged scores where both have reviewed
+- [x] Edit existing review (update form pre-populated with saved values)
+- [x] "Not yet reviewed" state — prompt the current user to add their review
 
 ---
 
 ## Phase 4 — Winery Map
-- [ ] Implement Leaflet + react-leaflet on `/map` page
-- [ ] Plot all wineries with PostGIS coordinates on OpenStreetMap tiles
-- [ ] Clicking a pin opens a popup with winery name + link to their wines
-- [ ] Handle SSR: Leaflet is client-only, needs dynamic import with `ssr: false`
+- [x] Implement Leaflet + react-leaflet on `/map` page
+- [x] Plot all wineries with PostGIS coordinates on OpenStreetMap tiles
+- [x] Clicking a pin opens a popup with winery name + link to their wines
+- [x] Handle SSR: Leaflet is client-only, needs dynamic import with `ssr: false`
 
 ---
 
 ## Phase 5 — Enhancements
-- [ ] Label photo upload — Supabase Storage, URL saved to `wine_vintages.label_photo_url`
+- [ ] Label photo upload — Supabase Storage, URL saved to `wine_vintages.label_image_url`
 - [ ] Display label photo on wine detail page
 - [ ] Wine search — filter by name, winery, region, grape, or type
 - [ ] Sort wines — by rating, vintage, date added
