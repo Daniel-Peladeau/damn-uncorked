@@ -97,6 +97,12 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
     return aOwn === bOwn ? 0 : aOwn ? -1 : 1
   })
 
+  const hasOwnReview = allReviews.some((review) => review.user_id === user?.id)
+  // A lone real review card only spans the full grid width when it's the
+  // only card rendered at all — once the "add your review" prompt joins it
+  // as a second grid item, both should sit at normal half-width.
+  const isLoneCard = allReviews.length === 1 && hasOwnReview
+
   return (
     <div className="space-y-8">
       <Link href="/wines">
@@ -153,10 +159,6 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
           <div className="rounded-lg border border-border bg-card p-6">
             <p className="text-muted-foreground">Couldn&apos;t load reviews right now. Please try again.</p>
           </div>
-        ) : allReviews.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card p-6">
-            <p className="text-muted-foreground">No reviews yet for this vintage.</p>
-          </div>
         ) : (
           <>
             {/* Combined score is computed here for display only — per
@@ -172,13 +174,32 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
                   review={review}
                   isOwnReview={review.user_id === user?.id}
                   vintageId={vintage.id}
-                  className={allReviews.length === 1 ? 'md:col-span-2' : undefined}
+                  className={isLoneCard ? 'md:col-span-2' : undefined}
                 />
               ))}
+              {!hasOwnReview && (
+                <PromptReviewCard
+                  vintageId={vintage.id}
+                  className={allReviews.length === 0 ? 'md:col-span-2' : undefined}
+                />
+              )}
             </div>
           </>
         )}
       </div>
+    </div>
+  )
+}
+
+function PromptReviewCard({ vintageId, className }: { vintageId: string; className?: string }) {
+  return (
+    <div
+      className={`flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card p-6 text-center ${className ?? ''}`}
+    >
+      <p className="text-muted-foreground">You haven&apos;t reviewed this wine yet.</p>
+      <Link href={`/wines/${vintageId}/review`}>
+        <Button size="sm">Add Your Review</Button>
+      </Link>
     </div>
   )
 }
