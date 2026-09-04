@@ -171,6 +171,7 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
                   key={review.id}
                   review={review}
                   isOwnReview={review.user_id === user?.id}
+                  vintageId={vintage.id}
                   className={allReviews.length === 1 ? 'md:col-span-2' : undefined}
                 />
               ))}
@@ -185,17 +186,26 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
 function ReviewCard({
   review,
   isOwnReview,
+  vintageId,
   className,
 }: {
   review: Review
   isOwnReview: boolean
+  vintageId: string
   className?: string
 }) {
   return (
     <div className={`rounded-lg border border-border bg-card p-6 ${className ?? ''}`}>
-      <h2 className="mb-4 text-lg font-semibold text-foreground">
-        {isOwnReview ? 'Your Review' : 'Their Review'}
-      </h2>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-foreground">{isOwnReview ? 'Your Review' : 'Their Review'}</h2>
+        {isOwnReview && (
+          <Link href={`/wines/${vintageId}/review`}>
+            <Button variant="ghost" size="sm">
+              Edit
+            </Button>
+          </Link>
+        )}
+      </div>
 
       <div className="mb-6 flex items-end gap-2">
         <div className="text-4xl font-bold text-foreground">{review.overall}</div>
