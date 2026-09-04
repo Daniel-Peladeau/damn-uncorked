@@ -20,6 +20,12 @@ const RATING_CATEGORIES = [
   { label: 'Value', key: 'value' as const },
 ]
 
+// Rounded to 1 decimal place — these are averages of small integers (1-5 or
+// 1-10), so more precision would just be noise.
+function average(values: number[]): number {
+  return Math.round((values.reduce((sum, v) => sum + v, 0) / values.length) * 10) / 10
+}
+
 export default async function WineDetailPage({ params }: WineDetailPageProps) {
   const { id } = await params
   const supabase = await createClient()
@@ -152,16 +158,24 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
             <p className="text-muted-foreground">No reviews yet for this vintage.</p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
-            {allReviews.map((review) => (
-              <ReviewCard
-                key={review.id}
-                review={review}
-                isOwnReview={review.user_id === user?.id}
-                className={allReviews.length === 1 ? 'md:col-span-2' : undefined}
-              />
-            ))}
-          </div>
+          <>
+            {/* Combined score is computed here for display only — per
+                CLAUDE.md, it's never persisted, so it's recomputed from the
+                two reviews on every render rather than read from a stored
+                column. */}
+            {allReviews.length === 2 && <CombinedRatingCard reviews={allReviews} />}
+
+            <div className="grid gap-6 md:grid-cols-2">
+              {allReviews.map((review) => (
+                <ReviewCard
+                  key={review.id}
+                  review={review}
+                  isOwnReview={review.user_id === user?.id}
+                  className={allReviews.length === 1 ? 'md:col-span-2' : undefined}
+                />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
@@ -239,6 +253,51 @@ function ReviewCard({
           <p className="mt-1 font-semibold text-foreground">{review.would_buy_again ? '✓ Yes' : '✗ No'}</p>
         </div>
       )}
+    </div>
+  )
+}
+
+// Combined score is computed, not stored (per CLAUDE.md) — this only ever
+// renders once both reviews exist, so `reviews` is always exactly the two
+// rows in practice, but the averaging itself works for any count.
+function CombinedRatingCard({ reviews }: { reviews: Review[] }) {
+  const combinedOverall = average(reviews.map((r) => r.overall))
+
+  return (
+    <div className="rounded-lg border border-border bg-card p-6">
+      <h2 className="mb-4 text-lg font-semibold text-foreground">Combined Rating</h2>
+
+      <div className="mb-6 flex items-end gap-2">
+        <div className="text-4xl font-bold text-foreground">{combinedOverall}</div>
+        <div className="mb-1 text-sm text-muted-foreground">/10 overall</div>
+      </div>
+      <div className="mb-6 flex items-center gap-1">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star
+            key={i}
+            className={`h-5 w-5 ${
+              i < Math.round(combinedOverall / 2) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
+            }`}
+          />
+        ))}
+      </div>
+
+      <div className="space-y-3">
+        {RATING_CATEGORIES.map(({ label, key }) => {
+          const combinedValue = average(reviews.map((r) => r[key]))
+          return (
+            <div key={key}>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm text-muted-foreground">{label}</p>
+                <p className="text-sm font-medium text-foreground">{combinedValue}/5</p>
+              </div>
+              <div className="h-2 rounded-full bg-secondary">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${(combinedValue / 5) * 100}%` }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
