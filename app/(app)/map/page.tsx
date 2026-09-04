@@ -1,27 +1,24 @@
 import { PageHeader } from '@/components/PageHeader'
+import { WineryMapLoader } from '@/components/WineryMapLoader'
+import { getWineriesWithLocations } from '@/lib/supabase/wineries'
 
-export default function MapPage() {
+export default async function MapPage() {
+  const wineries = await getWineriesWithLocations()
+
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Winery Map"
-        description="Explore your wineries geographically"
-      />
+      <PageHeader title="Winery Map" description="Explore your wineries geographically" />
 
-      <div className="rounded-lg border border-border bg-card p-12 text-center">
-        <h2 className="mb-4 text-xl font-semibold text-foreground">
-          Map Coming Soon
-        </h2>
-        <p className="text-muted-foreground mb-6">
-          This is a placeholder for the winery map feature. Soon you&apos;ll be able
-          to see all your logged wineries plotted on an interactive map.
-        </p>
-        <div className="h-96 rounded-lg bg-secondary/20 flex items-center justify-center">
+      {wineries.length === 0 ? (
+        <div className="rounded-lg border border-border bg-card p-12 text-center">
+          <h2 className="mb-4 text-xl font-semibold text-foreground">No wineries plotted yet</h2>
           <p className="text-muted-foreground">
-            Map will be displayed here using Leaflet + OpenStreetMap
+            Once you log a wine, its winery is geocoded automatically and will show up here.
           </p>
         </div>
-      </div>
+      ) : (
+        <WineryMapLoader wineries={wineries} />
+      )}
     </div>
   )
 }

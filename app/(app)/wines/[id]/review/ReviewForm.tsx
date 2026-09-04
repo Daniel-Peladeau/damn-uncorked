@@ -48,10 +48,10 @@ function RatingSelect({
   name: string
   max: number
   id?: string
-  defaultValue?: number
+  defaultValue?: number | null
 }) {
   return (
-    <Select name={name} required defaultValue={defaultValue !== undefined ? String(defaultValue) : undefined}>
+    <Select name={name} required defaultValue={defaultValue != null ? String(defaultValue) : undefined}>
       <SelectTrigger id={id} className="w-full">
         <SelectValue placeholder="—" />
       </SelectTrigger>
@@ -74,7 +74,7 @@ export function ReviewForm({
 }: {
   vintageId: string
   wineName: string
-  vintageYear: number
+  vintageYear: number | null
   existingReview: ExistingReview | null
 }) {
   const saveReviewForVintage = saveReview.bind(null, vintageId)
@@ -93,7 +93,7 @@ export function ReviewForm({
 
       <PageHeader
         title={isEditing ? 'Edit Your Review' : 'Add Your Review'}
-        description={`${wineName} • ${vintageYear}`}
+        description={`${wineName} • ${vintageYear ?? 'Unknown vintage'}`}
       />
 
       <div className="max-w-2xl">
