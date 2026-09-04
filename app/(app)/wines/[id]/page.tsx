@@ -1,21 +1,88 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/PageHeader'
-import { mockWines } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/server'
 import { ArrowLeft, Star, MapPin } from 'lucide-react'
 import { notFound } from 'next/navigation'
+import type { Database } from '@/lib/types/database'
 
 interface WineDetailPageProps {
   params: Promise<{ id: string }>
 }
 
+type Review = Database['public']['Tables']['reviews']['Row']
+
+const RATING_CATEGORIES = [
+  { label: 'Appearance', key: 'appearance' as const },
+  { label: 'Nose', key: 'nose' as const },
+  { label: 'Palate', key: 'palate' as const },
+  { label: 'Finish', key: 'finish' as const },
+  { label: 'Value', key: 'value' as const },
+]
+
 export default async function WineDetailPage({ params }: WineDetailPageProps) {
   const { id } = await params
-  const wine = mockWines.find((w) => w.id === id)
+  const supabase = await createClient()
 
-  if (!wine) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // wine_vintages is the row this route's `id` addresses (one wine can have
+  // several vintages, each with its own reviews) — embed the parent `wines`
+  // row and its `wineries`/`wine_grapes` relations rather than issuing
+  // separate round-trips for each.
+  const { data: vintage, error: vintageError } = await supabase
+    .from('wine_vintages')
+    .select(
+      `
+      id,
+      vintage,
+      wines (
+        name,
+        type,
+        wineries ( region, country ),
+        wine_grapes ( grapes ( name ) )
+      )
+    `
+    )
+    .eq('id', id)
+    .maybeSingle()
+
+  // A real query error (malformed uuid, RLS-unrelated failure, network) is
+  // distinct from a clean "no such row" — RLS itself can't be distinguished
+  // from a genuine no-match (Postgres filters denied rows the same way it
+  // filters absent ones, by design), so that case still falls through to
+  // notFound() below, but an actual error shouldn't silently render as a 404.
+  if (vintageError) {
+    console.error(`Failed to load wine vintage "${id}":`, vintageError)
+    throw new Error('Failed to load wine details.')
+  }
+
+  if (!vintage || !vintage.wines) {
     notFound()
   }
+
+  const wine = vintage.wines
+  const winery = wine.wineries
+  const grapes = wine.wine_grapes.map((wg) => wg.grapes.name)
+
+  // Every allowed user can read every review for a vintage (that's the whole
+  // point — Dan and Madison each log independent reviews of the same
+  // bottle), so this is intentionally not filtered to the current user.
+  const { data: reviews, error: reviewsError } = await supabase
+    .from('reviews')
+    .select(
+      'id, wine_vintage_id, user_id, appearance, nose, palate, finish, value, overall, tasting_notes, food_pairing, would_buy_again, occasion, created_at'
+    )
+    .eq('wine_vintage_id', vintage.id)
+    .order('created_at', { ascending: true })
+
+  if (reviewsError) {
+    console.error(`Failed to load reviews for vintage "${vintage.id}":`, reviewsError)
+  }
+
+  const allReviews = reviews ?? []
 
   return (
     <div className="space-y-8">
@@ -26,82 +93,73 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
         </Button>
       </Link>
 
-      <PageHeader
-        title={wine.name}
-        description={`${wine.winery} • ${wine.vintage}`}
-      />
+      <PageHeader title={wine.name} description={`${winery?.region ?? 'Unknown region'} • ${vintage.vintage}`} />
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Main Info */}
         <div className="md:col-span-2 space-y-6">
           {/* Wine Details Card */}
           <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-foreground">
-              Wine Details
-            </h2>
+            <h2 className="mb-4 text-lg font-semibold text-foreground">Wine Details</h2>
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
+              {(winery?.region || winery?.country) && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Region</p>
+                    <p className="font-medium text-foreground">
+                      {[winery?.region, winery?.country].filter(Boolean).join(', ')}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {grapes.length > 0 && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Region</p>
-                  <p className="font-medium text-foreground">
-                    {wine.region}, {wine.country}
-                  </p>
+                  <p className="text-sm text-muted-foreground mb-2">Grapes</p>
+                  <div className="flex flex-wrap gap-2">
+                    {grapes.map((grape) => (
+                      <span
+                        key={grape}
+                        className="inline-block rounded bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground"
+                      >
+                        {grape}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Grapes</p>
-                <div className="flex flex-wrap gap-2">
-                  {wine.grapes.map((grape) => (
-                    <span
-                      key={grape}
-                      className="inline-block rounded bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground"
-                    >
-                      {grape}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              )}
               <div>
                 <p className="text-sm text-muted-foreground mb-2">Type</p>
-                <p className="capitalize font-medium text-foreground">
-                  {wine.type}
-                </p>
+                <p className="capitalize font-medium text-foreground">{wine.type}</p>
               </div>
             </div>
           </div>
 
-          {/* Tasting Notes */}
-          {wine.tastingNotes && (
+          {/* Reviews */}
+          {reviewsError ? (
             <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="mb-4 text-lg font-semibold text-foreground">
-                Tasting Notes
-              </h2>
-              <p className="text-muted-foreground italic">"{wine.tastingNotes}"</p>
+              <p className="text-muted-foreground">Couldn&apos;t load reviews right now. Please try again.</p>
             </div>
-          )}
-
-          {/* Food Pairing */}
-          {wine.foodPairing && (
+          ) : allReviews.length === 0 ? (
             <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="mb-4 text-lg font-semibold text-foreground">
-                Food Pairing
-              </h2>
-              <p className="text-muted-foreground">{wine.foodPairing}</p>
+              <p className="text-muted-foreground">No reviews yet for this vintage.</p>
             </div>
+          ) : (
+            allReviews.map((review) => (
+              <ReviewCard key={review.id} review={review} isOwnReview={review.user_id === user?.id} />
+            ))
           )}
         </div>
 
         {/* Ratings Sidebar */}
         <div className="space-y-6">
-          {/* Overall Rating */}
-          {wine.ratings.overall && (
-            <div className="rounded-lg border border-border bg-card p-6">
-              <p className="mb-4 text-sm text-muted-foreground">Overall Rating</p>
+          {allReviews.map((review) => (
+            <div key={review.id} className="rounded-lg border border-border bg-card p-6">
+              <p className="mb-4 text-sm text-muted-foreground">
+                {review.user_id === user?.id ? 'Your Overall Rating' : 'Their Overall Rating'}
+              </p>
               <div className="flex items-end gap-2">
-                <div className="text-4xl font-bold text-foreground">
-                  {wine.ratings.overall}
-                </div>
+                <div className="text-4xl font-bold text-foreground">{review.overall}</div>
                 <div className="mb-1 text-sm text-muted-foreground">/10</div>
               </div>
               <div className="mt-4 flex items-center gap-1">
@@ -109,60 +167,66 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
                   <Star
                     key={i}
                     className={`h-5 w-5 ${
-                      i < Math.round(wine.ratings.overall! / 2)
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-muted-foreground'
+                      i < Math.round(review.overall / 2) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
                     }`}
                   />
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Category Ratings */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h3 className="mb-4 font-semibold text-foreground">Ratings</h3>
-            <div className="space-y-3">
-              {[
-                { label: 'Appearance', key: 'appearance' as const },
-                { label: 'Nose', key: 'nose' as const },
-                { label: 'Palate', key: 'palate' as const },
-                { label: 'Finish', key: 'finish' as const },
-                { label: 'Value', key: 'value' as const },
-              ].map(({ label, key }) => (
-                <div key={key}>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm text-muted-foreground">{label}</p>
-                    <p className="text-sm font-medium text-foreground">
-                      {wine.ratings[key] || '—'}/5
-                    </p>
-                  </div>
-                  {wine.ratings[key] && (
-                    <div className="h-2 rounded-full bg-secondary">
-                      <div
-                        className="h-full rounded-full bg-primary"
-                        style={{
-                          width: `${(wine.ratings[key]! / 5) * 100}%`,
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Would Buy Again */}
-          {wine.wouldBuyAgain !== undefined && (
-            <div className="rounded-lg border border-border bg-card p-6">
-              <p className="text-sm text-muted-foreground">Would Buy Again</p>
-              <p className="mt-2 text-lg font-semibold text-foreground">
-                {wine.wouldBuyAgain ? '✓ Yes' : '✗ No'}
-              </p>
-            </div>
-          )}
+          ))}
         </div>
       </div>
+    </div>
+  )
+}
+
+function ReviewCard({ review, isOwnReview }: { review: Review; isOwnReview: boolean }) {
+  return (
+    <div className="rounded-lg border border-border bg-card p-6">
+      <h2 className="mb-4 text-lg font-semibold text-foreground">
+        {isOwnReview ? 'Your Review' : 'Their Review'}
+      </h2>
+      <div className="space-y-3">
+        {RATING_CATEGORIES.map(({ label, key }) => (
+          <div key={key}>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-sm text-muted-foreground">{label}</p>
+              <p className="text-sm font-medium text-foreground">{review[key]}/5</p>
+            </div>
+            <div className="h-2 rounded-full bg-secondary">
+              <div className="h-full rounded-full bg-primary" style={{ width: `${(review[key] / 5) * 100}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {review.tasting_notes && (
+        <div className="mt-4">
+          <p className="text-sm text-muted-foreground mb-1">Tasting Notes</p>
+          <p className="text-muted-foreground italic">&quot;{review.tasting_notes}&quot;</p>
+        </div>
+      )}
+
+      {review.food_pairing && (
+        <div className="mt-4">
+          <p className="text-sm text-muted-foreground mb-1">Food Pairing</p>
+          <p className="text-muted-foreground">{review.food_pairing}</p>
+        </div>
+      )}
+
+      {review.occasion && (
+        <div className="mt-4">
+          <p className="text-sm text-muted-foreground mb-1">Occasion</p>
+          <p className="text-muted-foreground">{review.occasion}</p>
+        </div>
+      )}
+
+      {review.would_buy_again !== null && (
+        <div className="mt-4">
+          <p className="text-sm text-muted-foreground">Would Buy Again</p>
+          <p className="mt-1 font-semibold text-foreground">{review.would_buy_again ? '✓ Yes' : '✗ No'}</p>
+        </div>
+      )}
     </div>
   )
 }
