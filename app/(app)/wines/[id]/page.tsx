@@ -82,7 +82,14 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
     console.error(`Failed to load reviews for vintage "${vintage.id}":`, reviewsError)
   }
 
-  const allReviews = reviews ?? []
+  // The signed-in user's own review (if present) always renders first —
+  // among only ever 0-2 rows (one review per user per vintage), there's no
+  // other meaningful order to preserve.
+  const allReviews = [...(reviews ?? [])].sort((a, b) => {
+    const aOwn = a.user_id === user?.id
+    const bOwn = b.user_id === user?.id
+    return aOwn === bOwn ? 0 : aOwn ? -1 : 1
+  })
 
   return (
     <div className="space-y-8">
@@ -95,97 +102,102 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
 
       <PageHeader title={wine.name} description={`${winery?.region ?? 'Unknown region'} • ${vintage.vintage}`} />
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Main Info */}
-        <div className="md:col-span-2 space-y-6">
-          {/* Wine Details Card */}
-          <div className="rounded-lg border border-border bg-card p-6">
-            <h2 className="mb-4 text-lg font-semibold text-foreground">Wine Details</h2>
-            <div className="space-y-4">
-              {(winery?.region || winery?.country) && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Region</p>
-                    <p className="font-medium text-foreground">
-                      {[winery?.region, winery?.country].filter(Boolean).join(', ')}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {grapes.length > 0 && (
+      <div className="space-y-6">
+        {/* Wine Details Card */}
+        <div className="rounded-lg border border-border bg-card p-6">
+          <h2 className="mb-4 text-lg font-semibold text-foreground">Wine Details</h2>
+          <div className="space-y-4">
+            {(winery?.region || winery?.country) && (
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Grapes</p>
-                  <div className="flex flex-wrap gap-2">
-                    {grapes.map((grape) => (
-                      <span
-                        key={grape}
-                        className="inline-block rounded bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground"
-                      >
-                        {grape}
-                      </span>
-                    ))}
-                  </div>
+                  <p className="text-sm text-muted-foreground">Region</p>
+                  <p className="font-medium text-foreground">
+                    {[winery?.region, winery?.country].filter(Boolean).join(', ')}
+                  </p>
                 </div>
-              )}
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Type</p>
-                <p className="capitalize font-medium text-foreground">{wine.type}</p>
               </div>
+            )}
+            {grapes.length > 0 && (
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Grapes</p>
+                <div className="flex flex-wrap gap-2">
+                  {grapes.map((grape) => (
+                    <span
+                      key={grape}
+                      className="inline-block rounded bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground"
+                    >
+                      {grape}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Type</p>
+              <p className="capitalize font-medium text-foreground">{wine.type}</p>
             </div>
           </div>
-
-          {/* Reviews */}
-          {reviewsError ? (
-            <div className="rounded-lg border border-border bg-card p-6">
-              <p className="text-muted-foreground">Couldn&apos;t load reviews right now. Please try again.</p>
-            </div>
-          ) : allReviews.length === 0 ? (
-            <div className="rounded-lg border border-border bg-card p-6">
-              <p className="text-muted-foreground">No reviews yet for this vintage.</p>
-            </div>
-          ) : (
-            allReviews.map((review) => (
-              <ReviewCard key={review.id} review={review} isOwnReview={review.user_id === user?.id} />
-            ))
-          )}
         </div>
 
-        {/* Ratings Sidebar */}
-        <div className="space-y-6">
-          {allReviews.map((review) => (
-            <div key={review.id} className="rounded-lg border border-border bg-card p-6">
-              <p className="mb-4 text-sm text-muted-foreground">
-                {review.user_id === user?.id ? 'Your Overall Rating' : 'Their Overall Rating'}
-              </p>
-              <div className="flex items-end gap-2">
-                <div className="text-4xl font-bold text-foreground">{review.overall}</div>
-                <div className="mb-1 text-sm text-muted-foreground">/10</div>
-              </div>
-              <div className="mt-4 flex items-center gap-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-5 w-5 ${
-                      i < Math.round(review.overall / 2) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Reviews — side by side so both users' independent reviews of the
+            same bottle are visible at once, rather than one replacing the
+            other or requiring a tab switch. */}
+        {reviewsError ? (
+          <div className="rounded-lg border border-border bg-card p-6">
+            <p className="text-muted-foreground">Couldn&apos;t load reviews right now. Please try again.</p>
+          </div>
+        ) : allReviews.length === 0 ? (
+          <div className="rounded-lg border border-border bg-card p-6">
+            <p className="text-muted-foreground">No reviews yet for this vintage.</p>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2">
+            {allReviews.map((review) => (
+              <ReviewCard
+                key={review.id}
+                review={review}
+                isOwnReview={review.user_id === user?.id}
+                className={allReviews.length === 1 ? 'md:col-span-2' : undefined}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function ReviewCard({ review, isOwnReview }: { review: Review; isOwnReview: boolean }) {
+function ReviewCard({
+  review,
+  isOwnReview,
+  className,
+}: {
+  review: Review
+  isOwnReview: boolean
+  className?: string
+}) {
   return (
-    <div className="rounded-lg border border-border bg-card p-6">
+    <div className={`rounded-lg border border-border bg-card p-6 ${className ?? ''}`}>
       <h2 className="mb-4 text-lg font-semibold text-foreground">
         {isOwnReview ? 'Your Review' : 'Their Review'}
       </h2>
+
+      <div className="mb-6 flex items-end gap-2">
+        <div className="text-4xl font-bold text-foreground">{review.overall}</div>
+        <div className="mb-1 text-sm text-muted-foreground">/10 overall</div>
+      </div>
+      <div className="mb-6 flex items-center gap-1">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star
+            key={i}
+            className={`h-5 w-5 ${
+              i < Math.round(review.overall / 2) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
+            }`}
+          />
+        ))}
+      </div>
+
       <div className="space-y-3">
         {RATING_CATEGORIES.map(({ label, key }) => (
           <div key={key}>
