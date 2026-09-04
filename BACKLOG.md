@@ -59,6 +59,8 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 ---
 
 ## Phase 5 — Enhancements
+*Auto-fetch (PR #40) hotlinks a bottle photo from Open Food Facts by winery+wine name during entry — free, no key, but coverage is hit-or-miss (weak for boutique wines) and image QUALITY is inconsistent since it's crowd-sourced (e.g. Kim Crawford's photo has other items visible in the background). Manual upload below is still needed as the real fix for both gaps, not just a fallback for zero-coverage wines.*
+
 - [ ] Label photo upload — Supabase Storage, URL saved to `wine_vintages.label_image_url`
 - [ ] Display label photo on wine detail page
 - [ ] Wine search — filter by name, winery, region, grape, or type

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/PageHeader'
 import { createClient } from '@/lib/supabase/server'
@@ -63,6 +64,7 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
       `
       id,
       vintage_year,
+      label_image_url,
       wines (
         name,
         wine_type,
@@ -140,36 +142,47 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
         {/* Wine Details Card */}
         <div className="rounded-lg border border-border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold text-foreground">Wine Details</h2>
-          <div className="space-y-4">
-            {(winery?.region || winery?.country) && (
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
+          <div className="flex gap-6">
+            {vintage.label_image_url && (
+              <Image
+                src={vintage.label_image_url}
+                alt={`${wine.name} label`}
+                width={160}
+                height={224}
+                className="h-56 w-40 flex-shrink-0 rounded object-contain"
+              />
+            )}
+            <div className="flex-1 space-y-4">
+              {(winery?.region || winery?.country) && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Region</p>
+                    <p className="font-medium text-foreground">
+                      {[winery?.region, winery?.country].filter(Boolean).join(', ')}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {grapes.length > 0 && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Region</p>
-                  <p className="font-medium text-foreground">
-                    {[winery?.region, winery?.country].filter(Boolean).join(', ')}
-                  </p>
+                  <p className="text-sm text-muted-foreground mb-2">Grapes</p>
+                  <div className="flex flex-wrap gap-2">
+                    {grapes.map((grape) => (
+                      <span
+                        key={grape}
+                        className="inline-block rounded bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground"
+                      >
+                        {grape}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            {grapes.length > 0 && (
+              )}
               <div>
-                <p className="text-sm text-muted-foreground mb-2">Grapes</p>
-                <div className="flex flex-wrap gap-2">
-                  {grapes.map((grape) => (
-                    <span
-                      key={grape}
-                      className="inline-block rounded bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground"
-                    >
-                      {grape}
-                    </span>
-                  ))}
-                </div>
+                <p className="text-sm text-muted-foreground mb-2">Type</p>
+                <p className="capitalize font-medium text-foreground">{wine.wine_type}</p>
               </div>
-            )}
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Type</p>
-              <p className="capitalize font-medium text-foreground">{wine.wine_type}</p>
             </div>
           </div>
         </div>

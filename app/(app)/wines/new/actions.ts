@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { WINE_TYPES, type WineType } from '@/lib/types/wine'
 import { getTrimmedString, parseCanonicalInteger, getRating } from '@/lib/reviews/validation'
 import { geocodeToLocationPatch } from '@/lib/geocoding'
+import { fetchWinePhotoPatch } from '@/lib/wine-photo'
 import type { PostgrestError } from '@supabase/supabase-js'
 
 export type AddWineFormState = {
@@ -352,8 +353,30 @@ export async function createWineEntry(
           .eq('vintage_year', vintage)
           .limit(1)
           .maybeSingle(),
-      () =>
-        supabase.from('wine_vintages').insert({ wine_id: wineId, vintage_year: vintage }).select('id').single()
+      async () => {
+        // Best-effort — a failed/empty fetch still lets the wine save, just
+        // without a label photo yet. Reuse a sibling vintage's photo first,
+        // since label art is usually identical across vintages of the same
+        // wine — avoids a redundant external lookup for the common case of
+        // logging another year of a wine already in the catalog.
+        const { data: siblingVintage } = await supabase
+          .from('wine_vintages')
+          .select('label_image_url')
+          .eq('wine_id', wineId)
+          .not('label_image_url', 'is', null)
+          .limit(1)
+          .maybeSingle()
+
+        const photoPatch = siblingVintage
+          ? { label_image_url: siblingVintage.label_image_url }
+          : await fetchWinePhotoPatch(wineryName, name)
+
+        return supabase
+          .from('wine_vintages')
+          .insert({ wine_id: wineId, vintage_year: vintage, ...photoPatch })
+          .select('id')
+          .single()
+      }
     ),
   ])
 
