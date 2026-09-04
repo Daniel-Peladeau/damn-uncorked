@@ -145,7 +145,6 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
             </div>
           </div>
         </div>
-      )}
 
         {/* Reviews — side by side so both users' independent reviews of the
             same bottle are visible at once, rather than one replacing the
