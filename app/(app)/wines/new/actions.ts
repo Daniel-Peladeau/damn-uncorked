@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { WINE_TYPES, type WineType } from '@/lib/types/wine'
+import { getTrimmedString, parseCanonicalInteger, getRating } from '@/lib/reviews/validation'
 import type { PostgrestError } from '@supabase/supabase-js'
 
 export type AddWineFormState = {
@@ -11,32 +12,6 @@ export type AddWineFormState = {
 
 function isWineType(value: string): value is WineType {
   return (WINE_TYPES as readonly string[]).includes(value)
-}
-
-function getTrimmedString(formData: FormData, key: string): string {
-  const value = formData.get(key)
-  return typeof value === 'string' ? value.trim() : ''
-}
-
-// Number("5e0") === 5 and Number.isInteger(5) === true, so a plain
-// Number()+isInteger check accepts scientific notation and other
-// non-canonical numeric strings. This action is a server entrypoint reachable
-// directly (not just through the UI's constrained inputs), so parsing is
-// restricted to a canonical integer string before converting.
-function parseCanonicalInteger(raw: string): number | null {
-  if (!/^-?\d+$/.test(raw)) return null
-  return Number(raw)
-}
-
-// The <Select> options in the UI already constrain ratings to 1-5/1-10, but
-// this action is a server entrypoint reachable directly (not just through
-// that UI), so the range/integer check has to be enforced here too.
-function getRating(formData: FormData, key: string, min: number, max: number): number | null {
-  const raw = getTrimmedString(formData, key)
-  if (raw.length === 0) return null
-  const parsed = parseCanonicalInteger(raw)
-  if (parsed === null || parsed < min || parsed > max) return null
-  return parsed
 }
 
 // ilike() treats "%" and "_" as wildcards, and "\" as its escape character —
@@ -378,10 +353,11 @@ export async function createWineEntry(
 
   // --- Create this user's review for the vintage -------------------------------
   // If this vintage already existed and this user already reviewed it, the
-  // insert below will hit the "one row per user per wine_vintage" constraint
-  // and surface as the generic save-error message above — editing an existing
-  // review is a separate, not-yet-built backlog item (Phase 3), so that's
-  // expected for now.
+  // insert below hits the "one row per user per wine_vintage" constraint and
+  // surfaces as the generic save-error message above. This form is for
+  // logging a wine for the first time, not editing an existing review of
+  // one — that's app/(app)/wines/[id]/review, reachable from the "Edit"
+  // button on the user's own review card on the wine detail page.
   const { error: reviewInsertError } = await supabase.from('reviews').insert({
     wine_vintage_id: vintageId,
     user_id: user.id,
