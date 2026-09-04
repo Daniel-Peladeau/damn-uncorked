@@ -13,7 +13,7 @@ export default function MapPage() {
           Map Coming Soon
         </h2>
         <p className="text-muted-foreground mb-6">
-          This is a placeholder for the winery map feature. Soon you'll be able
+          This is a placeholder for the winery map feature. Soon you&apos;ll be able
           to see all your logged wineries plotted on an interactive map.
         </p>
         <div className="h-96 rounded-lg bg-secondary/20 flex items-center justify-center">

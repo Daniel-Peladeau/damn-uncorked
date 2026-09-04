@@ -2,15 +2,17 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/PageHeader'
 import { WineCard } from '@/components/WineCard'
-import { mockWines } from '@/lib/mock-data'
+import { getWinesForUser } from '@/lib/supabase/queries'
 import { Plus } from 'lucide-react'
 
-export default function WinesPage() {
+export default async function WinesPage() {
+  const wines = await getWinesForUser()
+
   return (
     <div className="space-y-8">
       <PageHeader
         title="Your Wine Collection"
-        description={`${mockWines.length} wines logged`}
+        description={`${wines.length} wines logged`}
         action={
           <Link href="/wines/new">
             <Button size="lg" className="gap-2">
@@ -22,7 +24,7 @@ export default function WinesPage() {
       />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {mockWines.map((wine) => (
+        {wines.map((wine) => (
           <WineCard key={wine.id} wine={wine} />
         ))}
       </div>

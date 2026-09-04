@@ -62,7 +62,7 @@ export function WineCard({ wine, isClickable = true }: WineCardProps) {
 
       {wine.tastingNotes && (
         <p className="text-sm text-muted-foreground italic">
-          "{wine.tastingNotes}"
+          &ldquo;{wine.tastingNotes}&rdquo;
         </p>
       )}
     </div>
