@@ -61,21 +61,22 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 ## Phase 5 — Enhancements
 *Auto-fetch (PR #40) hotlinks a bottle photo from Open Food Facts by winery+wine name during entry — free, no key, but coverage is hit-or-miss (weak for boutique wines) and image QUALITY is inconsistent since it's crowd-sourced (e.g. Kim Crawford's photo has other items visible in the background). Manual upload below is still needed as the real fix for both gaps, not just a fallback for zero-coverage wines.*
 
-- [ ] Label photo upload — Supabase Storage, URL saved to `wine_vintages.label_image_url`
-- [ ] Display label photo on wine detail page
-- [ ] Wine search — filter by name, winery, region, grape, or type
-- [ ] Sort wines — by rating, vintage, date added
-- [ ] Delete wine / review (with confirmation)
+- [ ] Label photo upload — Supabase Storage, URL saved to `wine_vintages.label_image_url` (GitHub issue #41)
+- [x] Display label photo on wine detail page — landed as a side effect of PR #40's auto-fetch feature (`<Image>` rendering `vintage.label_image_url` in `app/(app)/wines/[id]/page.tsx`)
+- [ ] Wine search — filter by name, winery, region, grape, or type (GitHub issue #42)
+- [ ] Sort wines — by rating, vintage, date added (GitHub issue #43)
+- [ ] Delete wine / review (with confirmation) (GitHub issue #44)
 
 ---
 
 ## Phase 6 — Polish & Deploy
+- [ ] Research a more modern, inviting visual design direction — current UI is plain black/white/grayscale (GitHub issue #50)
 - [ ] Build public landing page at `/` (GitHub issue #11)
-- [ ] Mobile testing pass — all pages, sidebar, forms
-- [ ] Empty states — what shows when no wines are logged yet
-- [ ] Loading states — skeletons while Supabase data fetches
-- [ ] Error boundaries — graceful fallback if a page fetch fails
-- [ ] Final Vercel production deploy + smoke test
+- [ ] Mobile testing pass — all pages, sidebar, forms (GitHub issue #46)
+- [ ] Empty states — what shows when no wines are logged yet (GitHub issue #45)
+- [ ] Loading states — skeletons while Supabase data fetches (GitHub issue #47)
+- [ ] Error boundaries — graceful fallback if a page fetch fails (GitHub issue #48)
+- [ ] Final Vercel production deploy + smoke test (GitHub issue #49)
 
 ---
 
