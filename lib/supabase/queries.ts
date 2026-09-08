@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Wine } from '@/lib/types/wine'
+import type { SortOption } from '@/lib/types/sort'
 
 // No generated Database types exist in this repo yet, so the query result is
 // typed to match this exact select string rather than widened to `any`.
@@ -80,23 +81,43 @@ function mapRowToWine(row: WineVintageRow): Wine {
   }
 }
 
-export async function getWinesForUser(): Promise<Wine[]> {
+export async function getWinesForUser(sortBy: SortOption = 'recent'): Promise<Wine[]> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return []
 
-  const { data, error } = await supabase
-    .from('wine_vintages')
-    .select(WINE_SELECT)
-    .eq('reviews.user_id', user.id)
-    .order('created_at', { ascending: false })
-    .returns<WineVintageRow[]>()
+  const baseQuery = supabase.from('wine_vintages').select(WINE_SELECT).eq('reviews.user_id', user.id)
+
+  // "vintage" and "recent" are genuine top-level wine_vintages columns, so
+  // Postgrest can sort them at the database level. "rating" can't be pushed
+  // down the same way: reviews is a one-to-many embed at the schema level
+  // (many users could in principle review the same vintage), so Postgrest's
+  // foreignTable ordering only reorders each row's embedded reviews array —
+  // not the top-level rows — even though the .eq('reviews.user_id', ...)
+  // filter above collapses it to at most one review per row in practice.
+  // Sorted in JS below instead, after each row is mapped down to that one
+  // (or zero) review.
+  const query =
+    sortBy === 'vintage'
+      ? baseQuery.order('vintage_year', { ascending: false, nullsFirst: false })
+      : baseQuery.order('created_at', { ascending: false })
+
+  const { data, error } = await query.returns<WineVintageRow[]>()
 
   if (error) throw error
 
-  return (data ?? []).map(mapRowToWine)
+  const wines = (data ?? []).map(mapRowToWine)
+
+  if (sortBy === 'rating') {
+    // Wines this user hasn't rated yet (ratings.overall undefined) sort
+    // last, matching the nullsFirst: false behavior used for the
+    // database-level sorts above.
+    wines.sort((a, b) => (b.ratings.overall ?? -Infinity) - (a.ratings.overall ?? -Infinity))
+  }
+
+  return wines
 }
 
 export async function getWineById(vintageId: string): Promise<Wine | null> {
