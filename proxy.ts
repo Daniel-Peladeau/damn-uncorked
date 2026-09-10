@@ -37,6 +37,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|auth).*)',
+    // The trailing `|$` excludes only the exact root path: `$` asserts
+    // end-of-string at the position right after the leading `/`, which is
+    // true only when nothing follows it. All other paths are unaffected.
+    '/((?!_next/static|_next/image|favicon.ico|auth|$).*)',
   ],
 }

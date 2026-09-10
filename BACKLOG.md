@@ -71,7 +71,7 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 
 ## Phase 6 — Polish & Deploy
 - [ ] Research a more modern, inviting visual design direction — current UI is plain black/white/grayscale (GitHub issue #50)
-- [ ] Build public landing page at `/` (GitHub issue #11)
+- [x] Build public landing page at `/` (GitHub issue #11)
 - [ ] Mobile testing pass — all pages, sidebar, forms (GitHub issue #46)
 - [ ] Empty states — what shows when no wines are logged yet (GitHub issue #45)
 - [ ] Loading states — skeletons while Supabase data fetches (GitHub issue #47)
