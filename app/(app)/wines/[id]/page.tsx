@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ArrowLeft, Star, MapPin } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import type { Database } from '@/lib/types/database'
-import { DeleteReviewButton, DeleteWineButton } from './DeleteControls'
+import { DeleteReviewButton } from './DeleteControls'
 
 interface WineDetailPageProps {
   params: Promise<{ id: string }>
@@ -127,15 +127,12 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <Link href="/wines">
-          <Button variant="ghost" className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Wines
-          </Button>
-        </Link>
-        <DeleteWineButton vintageId={vintage.id} wineName={wine.name} />
-      </div>
+      <Link href="/wines">
+        <Button variant="ghost" className="gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Back to Wines
+        </Button>
+      </Link>
 
       <PageHeader
         title={wine.name}
