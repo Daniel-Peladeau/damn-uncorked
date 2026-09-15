@@ -65,7 +65,7 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 - [x] Display label photo on wine detail page — landed as a side effect of PR #40's auto-fetch feature (`<Image>` rendering `vintage.label_image_url` in `app/(app)/wines/[id]/page.tsx`)
 - [ ] Wine search — filter by name, winery, region, grape, or type (GitHub issue #42)
 - [ ] Sort wines — by rating, vintage, date added (GitHub issue #43)
-- [ ] Delete wine / review (with confirmation) (GitHub issue #44)
+- [x] Delete wine / review (with confirmation) (GitHub issue #44)
 
 ---
 
