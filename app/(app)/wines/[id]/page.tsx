@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ArrowLeft, Star, MapPin } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import type { Database } from '@/lib/types/database'
+import { DeleteReviewButton } from './DeleteControls'
 
 interface WineDetailPageProps {
   params: Promise<{ id: string }>
@@ -255,11 +256,14 @@ function ReviewCard({
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">{isOwnReview ? 'Your Review' : 'Their Review'}</h2>
         {isOwnReview && (
-          <Link href={`/wines/${vintageId}/review`}>
-            <Button variant="ghost" size="sm">
-              Edit
-            </Button>
-          </Link>
+          <div className="flex items-center gap-1">
+            <Link href={`/wines/${vintageId}/review`}>
+              <Button variant="ghost" size="sm">
+                Edit
+              </Button>
+            </Link>
+            <DeleteReviewButton vintageId={vintageId} reviewId={review.id} />
+          </div>
         )}
       </div>
 
