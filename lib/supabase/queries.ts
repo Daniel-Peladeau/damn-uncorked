@@ -55,6 +55,35 @@ type WineVintageRow = {
   }[]
 }
 
+// Strips diacritics (é → e, ü → u, etc.) so a plain-ASCII search like "rose"
+// or "gewurztraminer" matches "rosé"/"Gewürztraminer" — the far more common
+// way people actually type, especially on a phone keyboard.
+function foldDiacritics(value: string): string {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+}
+
+// Case-insensitive, diacritic-insensitive substring match across every
+// field the search UI advertises (name, winery, region, grape, or type)
+// plus country, since a wine's country is shown right alongside its region
+// on every card. Country is deliberately not in the search UI's own
+// wording; anyone typing "New Zealand" still expects it to work like
+// region does.
+function matchesSearch(wine: Wine, query: string): boolean {
+  const q = foldDiacritics(query.trim().toLowerCase())
+  if (q.length === 0) return true
+
+  const fold = (value: string) => foldDiacritics(value.toLowerCase())
+
+  return (
+    fold(wine.name).includes(q) ||
+    fold(wine.winery).includes(q) ||
+    fold(wine.region).includes(q) ||
+    fold(wine.country).includes(q) ||
+    fold(wine.type).includes(q) ||
+    wine.grapes.some((grape) => fold(grape).includes(q))
+  )
+}
+
 function mapRowToWine(row: WineVintageRow): Wine {
   const review = row.reviews[0]
 
@@ -81,7 +110,7 @@ function mapRowToWine(row: WineVintageRow): Wine {
   }
 }
 
-export async function getWinesForUser(sortBy: SortOption = 'recent'): Promise<Wine[]> {
+export async function getWinesForUser(sortBy: SortOption = 'recent', search?: string): Promise<Wine[]> {
   const supabase = await createClient()
   const {
     data: { user },
@@ -108,7 +137,16 @@ export async function getWinesForUser(sortBy: SortOption = 'recent'): Promise<Wi
 
   if (error) throw error
 
-  const wines = (data ?? []).map(mapRowToWine)
+  // Search filters across name/winery/region/grape/type, which straddles
+  // three levels of embedded relation (wines, wineries, and the doubly-
+  // nested wine_grapes -> grapes) — not something a single Postgrest .or()
+  // can express cleanly. Filtered in JS after mapping instead, same
+  // reasoning as the rating sort below.
+  let wines = (data ?? []).map(mapRowToWine)
+
+  if (search) {
+    wines = wines.filter((wine) => matchesSearch(wine, search))
+  }
 
   if (sortBy === 'rating') {
     // Wines this user hasn't rated yet (ratings.overall undefined) sort
