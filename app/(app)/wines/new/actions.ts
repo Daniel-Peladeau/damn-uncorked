@@ -4,9 +4,10 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { WINE_TYPES, type WineType } from '@/lib/types/wine'
 import { getTrimmedString, parseCanonicalInteger, getRating } from '@/lib/reviews/validation'
+import { parseGrapeNames } from '@/lib/wines/grapes'
+import { escapeIlikePattern, findOrCreateByName } from '@/lib/wines/find-or-create'
 import { geocodeToLocationPatch } from '@/lib/geocoding'
 import { fetchWinePhotoPatch } from '@/lib/wine-photo'
-import type { PostgrestError } from '@supabase/supabase-js'
 
 export type AddWineFormState = {
   error: string | null
@@ -16,80 +17,11 @@ function isWineType(value: string): value is WineType {
   return (WINE_TYPES as readonly string[]).includes(value)
 }
 
-// ilike() treats "%" and "_" as wildcards, and "\" as its escape character —
-// escape backslashes first (so we don't double-escape the escapes we add),
-// then the wildcard characters, so a name containing either is matched
-// literally rather than as a pattern.
-//
-// KNOWN LIMITATION: PostgREST also does its own "*" -> "%" substitution on
-// the raw pattern string, independently of (and before) Postgres's ILIKE
-// backslash-escaping. So escaping "*" here doesn't help — escapeIlikePattern
-// would turn "Cab*" into "Cab\*", PostgREST rewrites that to "Cab\%", and
-// Postgres ILIKE then reads "\%" as an escaped literal "%", not the original
-// "*". There's no way to preserve a literal "*" through `.ilike()` from the
-// client side. Net effect: a name containing "*" will never match its own
-// previously-inserted row on lookup, so it takes the "create" branch every
-// time — a duplicate row, same low-severity failure mode as the accepted
-// find-or-create race condition elsewhere in this file, not a crash.
-function escapeIlikePattern(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/[%_]/g, (match) => `\\${match}`)
-}
-
 // Shown to the user for any database failure — the real error (with table/
 // column/constraint detail from Postgrest) is logged server-side via
 // console.error instead of being sent to the client, since raw DB error text
 // isn't something a user-facing form should expose.
 const GENERIC_SAVE_ERROR = 'Something went wrong saving this wine. Please try again.'
-
-type FindOrCreateResult<Row extends { id: string }> =
-  | { ok: true; row: Row; created: boolean }
-  | { ok: false }
-
-type LookupResult<Row> = { data: Row | null; error: PostgrestError | null }
-
-// Shared by every "find a row by some filter, else create it" flow below
-// (winery, wine, grape, vintage). The actual `.from(table)` calls stay at
-// each call site (as callbacks) rather than being parameterized by table name
-// here — postgrest-js's insert/select typing doesn't hold up well when the
-// table name itself is a generic type parameter, so keeping the calls
-// concrete keeps this fully typed without resorting to `any`/type overrides.
-// `entityLabel`/`name` are only used for server-side log context.
-//
-// NOTE (accepted race condition): this is a select-then-insert, not an atomic
-// upsert, so two near-simultaneous submissions for a brand-new name could
-// both miss the lookup and insert duplicate rows. With only two users on this
-// app that's unlikely enough to accept for now rather than adding an
-// `.upsert()`/unique-constraint dependency we can't verify against the
-// currently-paused database. Every lookup below uses `.limit(1)` so that, if
-// a duplicate ever does exist, resolution degrades to "pick one" instead of
-// `.maybeSingle()` hard-erroring on >1 rows and permanently breaking every
-// future lookup for that name.
-async function findOrCreateByName<Row extends { id: string }>(
-  entityLabel: string,
-  name: string,
-  lookup: () => PromiseLike<LookupResult<Row>>,
-  create: () => PromiseLike<LookupResult<Row>>
-): Promise<FindOrCreateResult<Row>> {
-  const { data: existing, error: lookupError } = await lookup()
-
-  if (lookupError) {
-    console.error(`Failed to look up ${entityLabel} "${name}":`, lookupError)
-    return { ok: false }
-  }
-
-  if (existing) {
-    return { ok: true, row: existing, created: false }
-  }
-
-  const { data: created, error: insertError } = await create()
-
-  if (insertError || !created) {
-    console.error(`Failed to create ${entityLabel} "${name}":`, insertError)
-    return { ok: false }
-  }
-
-  return { ok: true, row: created, created: true }
-}
 
 export async function createWineEntry(
   _prevState: AddWineFormState,
@@ -117,22 +49,7 @@ export async function createWineEntry(
     return { error: 'Please enter a valid vintage year.' }
   }
 
-  // Dedup case-insensitively (e.g. "Merlot, merlot") — the grape lookup below
-  // is itself case-insensitive, so exact-string dedup alone would still let
-  // through two entries that resolve to the same grape row, producing two
-  // identical wine_grapes inserts. Keep the first-seen casing for display.
-  const grapeNames = Array.from(
-    grapesRaw
-      .split(',')
-      .map((grape) => grape.trim())
-      .filter((grape) => grape.length > 0)
-      .reduce((seen, grape) => {
-        const key = grape.toLowerCase()
-        if (!seen.has(key)) seen.set(key, grape)
-        return seen
-      }, new Map<string, string>())
-      .values()
-  )
+  const grapeNames = parseGrapeNames(grapesRaw)
 
   if (grapeNames.length === 0) {
     return { error: 'Please list at least one grape.' }

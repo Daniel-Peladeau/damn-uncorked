@@ -142,7 +142,14 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
       <div className="space-y-6">
         {/* Wine Details Card */}
         <div className="rounded-lg border border-border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold text-foreground">Wine Details</h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Wine Details</h2>
+            <Link href={`/wines/${vintage.id}/edit`}>
+              <Button variant="ghost" size="sm">
+                Edit
+              </Button>
+            </Link>
+          </div>
           <div className="flex gap-6">
             {vintage.label_image_url && (
               <Image
