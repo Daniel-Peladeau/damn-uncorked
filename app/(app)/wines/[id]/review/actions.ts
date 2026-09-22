@@ -67,7 +67,7 @@ export async function saveReview(
     .maybeSingle()
 
   if (vintageError) {
-    console.error(`Failed to look up vintage "${vintageId}" for review save:`, vintageError)
+    console.error('Failed to look up vintage for review save:', vintageId, vintageError)
     return { error: GENERIC_SAVE_ERROR }
   }
 
@@ -101,7 +101,7 @@ export async function saveReview(
   )
 
   if (upsertError) {
-    console.error(`Failed to save review for vintage "${vintageId}":`, upsertError)
+    console.error('Failed to save review for vintage:', vintageId, upsertError)
     return { error: GENERIC_SAVE_ERROR }
   }
 
