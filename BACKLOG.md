@@ -64,19 +64,23 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 - [ ] Label photo upload — Supabase Storage, URL saved to `wine_vintages.label_image_url` (GitHub issue #41)
 - [x] Display label photo on wine detail page — landed as a side effect of PR #40's auto-fetch feature (`<Image>` rendering `vintage.label_image_url` in `app/(app)/wines/[id]/page.tsx`)
 - [x] Wine search — filter by name, winery, region, grape, or type (GitHub issue #42)
-- [ ] Sort wines — by rating, vintage, date added (GitHub issue #43)
-- [x] Delete wine / review (with confirmation) (GitHub issue #44)
+- [x] Sort wines — by rating, vintage, date added (GitHub issue #43)
+- [x] Delete review (with confirmation) (GitHub issue #44)
+- [ ] Delete wine (with confirmation) — deferred pending ownership model (GitHub issue #63)
+- [x] Edit a wine's details after creation (GitHub issue #66)
+- [ ] Live winery location search when adding a wine, not just post-save geocoding (GitHub issue #68)
 
 ---
 
 ## Phase 6 — Polish & Deploy
 - [ ] Research a more modern, inviting visual design direction — current UI is plain black/white/grayscale (GitHub issue #50)
 - [x] Build public landing page at `/` (GitHub issue #11)
-- [ ] Mobile testing pass — all pages, sidebar, forms (GitHub issue #46)
-- [ ] Empty states — what shows when no wines are logged yet (GitHub issue #45)
-- [ ] Loading states — skeletons while Supabase data fetches (GitHub issue #47)
-- [ ] Error boundaries — graceful fallback if a page fetch fails (GitHub issue #48)
+- [ ] Mobile testing pass — all pages, sidebar, forms (GitHub issue #45)
+- [ ] Empty states — what shows when no wines are logged yet (GitHub issue #46)
+- [x] Loading states — skeletons while Supabase data fetches (GitHub issue #47)
+- [x] Error boundaries — graceful fallback if a page fetch fails (GitHub issue #48)
 - [ ] Final Vercel production deploy + smoke test (GitHub issue #49)
+- [ ] Account dropdown menu in sidebar — currently just a bare Sign out button (GitHub issue #67)
 
 ---
 
