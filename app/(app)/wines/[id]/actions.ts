@@ -48,7 +48,7 @@ export async function deleteReview(
     .select('id')
 
   if (error) {
-    console.error(`Failed to delete review "${reviewId}":`, error)
+    console.error('Failed to delete review:', reviewId, error)
     return { error: GENERIC_DELETE_ERROR }
   }
 

@@ -79,7 +79,7 @@ export async function updateWineEntry(
     .maybeSingle()
 
   if (vintageLookupError) {
-    console.error(`Failed to look up vintage "${vintageId}" for edit:`, vintageLookupError)
+    console.error('Failed to look up vintage for edit:', vintageId, vintageLookupError)
     return { error: GENERIC_SAVE_ERROR }
   }
 
@@ -175,7 +175,7 @@ export async function updateWineEntry(
       if (vintageUpdateError.code === '23505') {
         return { error: 'This wine already has a logged vintage for that year.' }
       }
-      console.error(`Failed to update vintage "${vintageId}" year:`, vintageUpdateError)
+      console.error('Failed to update vintage year:', vintageId, vintageUpdateError)
       return { error: GENERIC_SAVE_ERROR }
     }
   }
