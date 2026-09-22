@@ -17,7 +17,16 @@
 //   "Cabernet Sauvignon, Merlot, and Petit Verdot" -> ["Cabernet Sauvignon", "Merlot", "Petit Verdot"]
 //   "Cabernet Sauvignon, Merlot and Petit Verdot"   -> ["Cabernet Sauvignon", "Merlot", "Petit Verdot"]
 //   "Riesling & Gewürztraminer"                      -> ["Riesling", "Gewürztraminer"]
-const CONJUNCTION_PATTERN = /\s*(?:,\s*)?\b(?:and|&)\b\s*/gi
+//
+// "and" and "&" need different boundary handling: "and" is a word, so \b
+// around it correctly avoids matching inside "Grand" or "Sandra". "&" is
+// never a word character, so \b never matches directly against it when it's
+// surrounded by spaces (the realistic way anyone types it, e.g. "Riesling &
+// Gewürztraminer") — \b requires a \w on one side, and a space-&-space has
+// no \w touching the "&" at all, so `\b&\b` silently fails to match there.
+// "&" doesn't need a boundary assertion anyway: it's inherently unlike any
+// real grape-name character, so matching it unconditionally is safe.
+const CONJUNCTION_PATTERN = /\s*(?:,\s*)?(?:\band\b|&)\s*/gi
 
 // Dedup case-insensitively (e.g. "Merlot, merlot") — the grape lookup in the
 // server actions that consume this is itself case-insensitive, so
