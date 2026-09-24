@@ -4,13 +4,18 @@ import { usePathname } from 'next/navigation'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+interface AppLayoutProps {
+  children: React.ReactNode
+  userEmail: string | null
+}
+
+export function AppLayout({ children, userEmail }: AppLayoutProps) {
   const pathname = usePathname()
 
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <Sidebar currentPath={pathname} />
+      <Sidebar currentPath={pathname} userEmail={userEmail} />
 
       {/* Main content area */}
       <div className="flex flex-1 flex-col overflow-hidden">

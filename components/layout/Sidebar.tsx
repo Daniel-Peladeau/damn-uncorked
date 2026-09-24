@@ -4,6 +4,14 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   LayoutDashboard,
   Wine,
   Map,
@@ -11,15 +19,17 @@ import {
   Menu,
   X,
   LogOut,
+  ChevronsUpDown,
 } from 'lucide-react'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 interface SidebarProps {
   currentPath: string
+  userEmail: string | null
 }
 
-export function Sidebar({ currentPath }: SidebarProps) {
+export function Sidebar({ currentPath, userEmail }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
 
@@ -92,16 +102,38 @@ export function Sidebar({ currentPath }: SidebarProps) {
           ))}
         </nav>
 
-        {/* Footer — sign out */}
+        {/* Footer — account menu */}
         <div className="p-4 border-t border-border">
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-muted-foreground hover:text-foreground"
-            onClick={handleSignOut}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign out
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2 px-2"
+              >
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+                  {userEmail ? userEmail[0].toUpperCase() : '?'}
+                </span>
+                <span className="flex-1 truncate text-left text-sm">
+                  {userEmail ?? 'Account'}
+                </span>
+                <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              {userEmail && (
+                <>
+                  <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
+                    {userEmail}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <p className="mt-2 px-2 text-xs text-muted-foreground">v0.1.0</p>
         </div>
       </aside>
