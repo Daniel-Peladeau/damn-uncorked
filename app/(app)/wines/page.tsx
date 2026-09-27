@@ -45,6 +45,19 @@ export default async function WinesPage({ searchParams }: WinesPageProps) {
 
       {wines.length === 0 && q ? (
         <p className="text-muted-foreground">No wines match &quot;{q}&quot;.</p>
+      ) : wines.length === 0 ? (
+        <div className="rounded-lg border border-border bg-card p-12 text-center">
+          <h2 className="mb-4 text-xl font-semibold text-foreground">No wines logged yet</h2>
+          <p className="mb-6 text-muted-foreground">
+            Start building your collection by logging the first bottle.
+          </p>
+          <Link href="/wines/new">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Wine
+            </Button>
+          </Link>
+        </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {wines.map((wine) => (

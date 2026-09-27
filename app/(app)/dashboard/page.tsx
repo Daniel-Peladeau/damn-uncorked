@@ -44,11 +44,26 @@ export default async function Dashboard() {
         <h2 className="mb-6 text-2xl font-bold text-foreground">
           Your Top Wines
         </h2>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {topWines.map((wine) => (
-            <WineCard key={wine.id} wine={wine} />
-          ))}
-        </div>
+        {topWines.length === 0 ? (
+          <div className="rounded-lg border border-border bg-card p-12 text-center">
+            <h3 className="mb-4 text-xl font-semibold text-foreground">No wines logged yet</h3>
+            <p className="mb-6 text-muted-foreground">
+              Log your first bottle to start seeing it here.
+            </p>
+            <Link href="/wines/new">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Wine
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {topWines.map((wine) => (
+              <WineCard key={wine.id} wine={wine} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* About Section */}
