@@ -128,3 +128,12 @@
     @apply font-sans;
   }
 }
+/* Leaflet popups default to a white card; use theme tokens so they flip in dark mode */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--popover);
+  color: var(--popover-foreground);
+}
+.leaflet-container a.leaflet-popup-close-button {
+  color: var(--muted-foreground);
+}

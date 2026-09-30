@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { ThemeMenu } from '@/components/layout/ThemeMenu'
 
 interface SidebarProps {
   currentPath: string
@@ -128,6 +129,8 @@ export function Sidebar({ currentPath, userEmail }: SidebarProps) {
                   <DropdownMenuSeparator />
                 </>
               )}
+              <ThemeMenu />
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out
