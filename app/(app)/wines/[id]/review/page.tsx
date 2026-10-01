@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { ReviewForm } from './ReviewForm'
+import { WineBreadcrumbLabel } from '@/components/layout/BreadcrumbLabels'
 
 interface ReviewPageProps {
   params: Promise<{ id: string }>
@@ -48,11 +49,14 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
   }
 
   return (
-    <ReviewForm
-      vintageId={id}
-      wineName={vintage.wines.name}
-      vintageYear={vintage.vintage_year}
-      existingReview={existingReview}
-    />
+    <>
+      <WineBreadcrumbLabel vintageId={id} name={vintage.wines.name} vintageYear={vintage.vintage_year} />
+      <ReviewForm
+        vintageId={id}
+        wineName={vintage.wines.name}
+        vintageYear={vintage.vintage_year}
+        existingReview={existingReview}
+      />
+    </>
   )
 }
