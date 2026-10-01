@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 export default function WineDetailLoading() {
   return (
     <div className="space-y-8">
-      <Skeleton className="h-8 w-36" />
+      <Skeleton className="h-8 w-36 md:hidden" />
 
       <PageHeaderSkeleton />
 

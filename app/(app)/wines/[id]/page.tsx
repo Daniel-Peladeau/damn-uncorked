@@ -7,6 +7,7 @@ import { ArrowLeft, Star, MapPin } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import type { Database } from '@/lib/types/database'
 import { DeleteReviewButton } from './DeleteControls'
+import { WineBreadcrumbLabel } from '@/components/layout/BreadcrumbLabels'
 
 interface WineDetailPageProps {
   params: Promise<{ id: string }>
@@ -127,7 +128,11 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
 
   return (
     <div className="space-y-8">
-      <Link href="/wines">
+      <WineBreadcrumbLabel vintageId={vintage.id} name={wine.name} vintageYear={vintage.vintage_year} />
+
+      {/* The TopBar breadcrumb covers this on desktop; on mobile it's the
+          bigger tap target, so it stays there. */}
+      <Link href="/wines" className="md:hidden">
         <Button variant="ghost" className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back to Wines

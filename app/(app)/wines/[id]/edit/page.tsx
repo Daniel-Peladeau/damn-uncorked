@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { EditWineForm } from './EditWineForm'
+import { WineBreadcrumbLabel } from '@/components/layout/BreadcrumbLabels'
 
 interface EditWinePageProps {
   params: Promise<{ id: string }>
@@ -45,17 +46,20 @@ export default async function EditWinePage({ params }: EditWinePageProps) {
   const grapeNames = wine.wine_grapes.map((wg) => wg.grapes.name)
 
   return (
-    <EditWineForm
-      vintageId={vintage.id}
-      initialValues={{
-        name: wine.name,
-        winery: winery?.name ?? '',
-        type: wine.wine_type,
-        region: winery?.region ?? '',
-        country: winery?.country ?? '',
-        vintage: vintage.vintage_year,
-        grapes: grapeNames.join(', '),
-      }}
-    />
+    <>
+      <WineBreadcrumbLabel vintageId={vintage.id} name={wine.name} vintageYear={vintage.vintage_year} />
+      <EditWineForm
+        vintageId={vintage.id}
+        initialValues={{
+          name: wine.name,
+          winery: winery?.name ?? '',
+          type: wine.wine_type,
+          region: winery?.region ?? '',
+          country: winery?.country ?? '',
+          vintage: vintage.vintage_year,
+          grapes: grapeNames.join(', '),
+        }}
+      />
+    </>
   )
 }

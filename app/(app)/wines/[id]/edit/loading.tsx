@@ -4,7 +4,7 @@ import { PageHeaderSkeleton } from '@/components/PageHeaderSkeleton'
 export default function EditWineLoading() {
   return (
     <div className="space-y-8">
-      <Skeleton className="h-8 w-32" />
+      <Skeleton className="h-8 w-32 md:hidden" />
 
       <PageHeaderSkeleton />
 

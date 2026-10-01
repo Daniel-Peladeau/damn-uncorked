@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
+import { BreadcrumbLabelsProvider } from './BreadcrumbLabels'
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -13,22 +14,24 @@ export function AppLayout({ children, userEmail }: AppLayoutProps) {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <Sidebar currentPath={pathname} userEmail={userEmail} />
+    <BreadcrumbLabelsProvider>
+      <div className="flex h-screen bg-background">
+        {/* Sidebar */}
+        <Sidebar currentPath={pathname} userEmail={userEmail} />
 
-      {/* Main content area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Top bar */}
-        <TopBar currentPath={pathname} />
+        {/* Main content area */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {/* Top bar */}
+          <TopBar currentPath={pathname} />
 
-        {/* Scrollable content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto p-6">
-            {children}
-          </div>
-        </main>
+          {/* Scrollable content */}
+          <main className="flex-1 overflow-y-auto">
+            <div className="container mx-auto p-6">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </BreadcrumbLabelsProvider>
   )
 }

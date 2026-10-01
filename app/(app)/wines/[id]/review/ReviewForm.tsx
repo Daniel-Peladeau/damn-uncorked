@@ -84,7 +84,9 @@ export function ReviewForm({
 
   return (
     <div className="space-y-8">
-      <Link href={backHref}>
+      {/* The TopBar breadcrumb covers this on desktop; on mobile it's the
+          bigger tap target, so it stays there. */}
+      <Link href={backHref} className="md:hidden">
         <Button variant="ghost" className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           Back to Wine
