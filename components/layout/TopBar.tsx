@@ -2,6 +2,8 @@
 
 import { Fragment } from 'react'
 import Link from 'next/link'
+import { Search } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -15,6 +17,7 @@ import { useBreadcrumbLabels } from './BreadcrumbLabels'
 
 interface TopBarProps {
   currentPath: string
+  onOpenSearch: () => void
 }
 
 interface Crumb {
@@ -49,7 +52,7 @@ function buildCrumbs(path: string, labels: Record<string, string>): Crumb[] {
   })
 }
 
-export function TopBar({ currentPath }: TopBarProps) {
+export function TopBar({ currentPath, onOpenSearch }: TopBarProps) {
   const crumbs = buildCrumbs(currentPath, useBreadcrumbLabels())
   // On mobile, trails longer than two collapse their middle crumbs behind an
   // ellipsis so the first and current crumbs always fit on one line.
@@ -95,6 +98,19 @@ export function TopBar({ currentPath }: TopBarProps) {
           })}
         </BreadcrumbList>
       </Breadcrumb>
+
+      {/* The tappable way into the command palette — phones have no ⌘K. */}
+      <Button
+        variant="outline"
+        onClick={onOpenSearch}
+        aria-label="Search"
+        aria-keyshortcuts="Meta+K Control+K"
+        className="ml-auto size-11 shrink-0 p-0 text-muted-foreground md:h-9 md:w-56 md:justify-start md:px-3"
+      >
+        <Search className="h-4 w-4" />
+        <span className="hidden flex-1 text-left md:inline">Search…</span>
+        <kbd className="hidden rounded border border-border px-1.5 font-mono text-xs md:inline">⌘K</kbd>
+      </Button>
     </header>
   )
 }
