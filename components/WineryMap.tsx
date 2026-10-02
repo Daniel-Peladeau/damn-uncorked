@@ -26,7 +26,9 @@ export function WineryMap({ wineries }: { wineries: WineryPin[] }) {
       bounds={bounds}
       boundsOptions={{ padding: [40, 40], maxZoom: 14 }}
       scrollWheelZoom={false}
-      className="h-96 w-full rounded-lg"
+      // isolate contains Leaflet's internal z-indexes (400–1000) so map panes
+      // and controls can't paint over the fixed BottomNav or dropdown menus.
+      className="isolate h-96 w-full rounded-lg"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
