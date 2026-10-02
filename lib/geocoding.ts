@@ -35,7 +35,7 @@ async function fetchNominatimSearch(query: string, limit: number): Promise<Respo
 
     return response
   } catch (error) {
-    console.error(`Nominatim search request failed for "${query}":`, error)
+    console.error('Nominatim search request failed for query:', query, error)
     return null
   }
 }
@@ -55,7 +55,7 @@ async function searchNominatim(query: string): Promise<GeocodeResult | null> {
 
     return { lat, lng }
   } catch (error) {
-    console.error(`Failed to parse Nominatim response for "${query}":`, error)
+    console.error('Failed to parse Nominatim response for query:', query, error)
     return null
   }
 }
@@ -120,7 +120,7 @@ export async function searchNominatimCandidates(query: string, limit = 5): Promi
       }))
       .filter((candidate) => Number.isFinite(candidate.lat) && Number.isFinite(candidate.lng))
   } catch (error) {
-    console.error(`Failed to parse Nominatim response for "${query}":`, error)
+    console.error('Failed to parse Nominatim response for query:', query, error)
     return []
   }
 }
