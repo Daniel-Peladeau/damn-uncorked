@@ -68,7 +68,7 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 - [x] Delete review (with confirmation) (GitHub issue #44)
 - [ ] Delete wine (with confirmation) — deferred pending ownership model (GitHub issue #63)
 - [x] Edit a wine's details after creation (GitHub issue #66)
-- [ ] Live winery location search when adding a wine, not just post-save geocoding (GitHub issue #68)
+- [x] Live winery location search when adding a wine, not just post-save geocoding (GitHub issue #68)
 
 ---
 

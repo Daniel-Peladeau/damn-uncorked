@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { PageHeader } from '@/components/PageHeader'
+import { WineryLocationSearch } from '@/components/WineryLocationSearch'
 import { ArrowLeft } from 'lucide-react'
 import { createWineEntry, type AddWineFormState } from './actions'
 import { WINE_TYPES } from '@/lib/types/wine'
@@ -51,6 +52,11 @@ function RatingSelect({ name, max, id }: { name: string; max: number; id?: strin
 
 export default function AddWinePage() {
   const [state, formAction] = useActionState(createWineEntry, initialState)
+  // Plain strings mirroring the (still uncontrolled) Region/Country inputs
+  // below, kept only so WineryLocationSearch can combine them into its
+  // Nominatim query as the user types — not used for the inputs' own value.
+  const [region, setRegion] = useState('')
+  const [country, setCountry] = useState('')
 
   return (
     <div className="space-y-8">
@@ -81,10 +87,7 @@ export default function AddWinePage() {
             <Input id="name" name="name" placeholder="e.g., Sauvignon Blanc" required />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="winery">Winery *</Label>
-            <Input id="winery" name="winery" placeholder="e.g., Cloudy Bay" required />
-          </div>
+          <WineryLocationSearch region={region} country={country} />
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -112,11 +115,23 @@ export default function AddWinePage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="region">Region *</Label>
-              <Input id="region" name="region" placeholder="e.g., Marlborough" required />
+              <Input
+                id="region"
+                name="region"
+                placeholder="e.g., Marlborough"
+                required
+                onChange={(e) => setRegion(e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="country">Country *</Label>
-              <Input id="country" name="country" placeholder="e.g., New Zealand" required />
+              <Input
+                id="country"
+                name="country"
+                placeholder="e.g., New Zealand"
+                required
+                onChange={(e) => setCountry(e.target.value)}
+              />
             </div>
           </div>
 

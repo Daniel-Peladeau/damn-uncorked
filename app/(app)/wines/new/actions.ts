@@ -6,7 +6,7 @@ import { WINE_TYPES, type WineType } from '@/lib/types/wine'
 import { getTrimmedString, parseCanonicalInteger, getRating } from '@/lib/reviews/validation'
 import { parseGrapeNames } from '@/lib/wines/grapes'
 import { escapeIlikePattern, findOrCreateByName } from '@/lib/wines/find-or-create'
-import { geocodeToLocationPatch } from '@/lib/geocoding'
+import { geocodeToLocationPatch, parseSelectedLocation, toGeographyPoint } from '@/lib/geocoding'
 import { fetchWinePhotoPatch } from '@/lib/wine-photo'
 
 export type AddWineFormState = {
@@ -55,6 +55,14 @@ export async function createWineEntry(
     return { error: 'Please list at least one grape.' }
   }
 
+  // Set when the user picked a result from the Add Wine form's live
+  // location search (components/WineryLocationSearch.tsx, GitHub issue #68)
+  // instead of leaving it to the existing post-save Nominatim guess.
+  const selectedLocation = parseSelectedLocation(
+    getTrimmedString(formData, 'wineryLat'),
+    getTrimmedString(formData, 'wineryLng')
+  )
+
   const appearance = getRating(formData, 'appearance', 1, 5)
   const nose = getRating(formData, 'nose', 1, 5)
   const palate = getRating(formData, 'palate', 1, 5)
@@ -96,6 +104,17 @@ export async function createWineEntry(
   // this properly, but that's a bigger change than this pass warrants and
   // can't be verified against the currently-paused database. Known follow-up.
 
+  // Prefers the user's confirmed search selection over a fresh Nominatim
+  // call — same definite-`location`-value convention as
+  // geocodeToLocationPatch, so either path is safe to spread directly into
+  // an insert/update.
+  async function resolveLocationPatch(): Promise<{ location: string | null }> {
+    if (selectedLocation) {
+      return { location: toGeographyPoint(selectedLocation) }
+    }
+    return geocodeToLocationPatch(wineryName, region, country)
+  }
+
   // --- Find-or-create winery (case-insensitive name match) -----------------
   // Explicit type argument: TS can't reliably unify the row shape from two
   // separate callback arguments via inference alone (it can silently fall
@@ -118,7 +137,7 @@ export async function createWineEntry(
     async () => {
       // Best-effort — a failed/empty geocode still lets the wine save, just
       // without a map pin for this winery yet.
-      const locationPatch = await geocodeToLocationPatch(wineryName, region, country)
+      const locationPatch = await resolveLocationPatch()
       return supabase
         .from('wineries')
         .insert({ name: wineryName, region, country, ...locationPatch })
@@ -132,17 +151,18 @@ export async function createWineEntry(
   }
   const wineryId = wineryResult.row.id
 
-  // The winery already existed — if the submitted region/country differ from
-  // what's stored, treat the form as a correction rather than silently
-  // discarding it. Re-geocode too, since a region/country correction means
-  // the stored location (if any) is now stale — geocodeToLocationPatch
-  // always returns a definite `location` (never omits it), so a failed
-  // re-geocode here clears the stale pin instead of silently keeping
-  // coordinates for the old region next to the newly-corrected text.
+  // The winery already existed — update its location if the user explicitly
+  // confirmed one via the live search, or if the submitted region/country
+  // differ from what's stored (treat the form as a correction rather than
+  // silently discarding it, and re-geocode since the stored location, if
+  // any, is now stale). geocodeToLocationPatch always returns a definite
+  // `location` (never omits it), so a failed re-geocode here clears the
+  // stale pin instead of silently keeping coordinates for the old region
+  // next to the newly-corrected text.
   if (!wineryResult.created) {
     const current = wineryResult.row
-    if (current.region !== region || current.country !== country) {
-      const locationPatch = await geocodeToLocationPatch(wineryName, region, country)
+    if (selectedLocation || current.region !== region || current.country !== country) {
+      const locationPatch = await resolveLocationPatch()
       const { error: wineryUpdateError } = await supabase
         .from('wineries')
         .update({ region, country, ...locationPatch })
