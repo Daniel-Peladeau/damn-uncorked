@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Wine } from '@/lib/types/wine'
 import type { SortOption } from '@/lib/types/sort'
+import { foldDiacritics } from '@/lib/utils'
 
 // No generated Database types exist in this repo yet, so the query result is
 // typed to match this exact select string rather than widened to `any`.
@@ -53,13 +54,6 @@ type WineVintageRow = {
     food_pairing: string | null
     would_buy_again: boolean | null
   }[]
-}
-
-// Strips diacritics (é → e, ü → u, etc.) so a plain-ASCII search like "rose"
-// or "gewurztraminer" matches "rosé"/"Gewürztraminer" — the far more common
-// way people actually type, especially on a phone keyboard.
-function foldDiacritics(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 }
 
 // Case-insensitive, diacritic-insensitive substring match across every

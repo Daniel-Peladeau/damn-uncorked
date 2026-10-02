@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { LogOut } from 'lucide-react'
 import {
   DropdownMenuContent,
@@ -8,8 +7,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { createClient } from '@/lib/supabase/client'
 import { ThemeMenu } from '@/components/layout/ThemeMenu'
+import { useSignOut } from './use-sign-out'
 
 interface AccountMenuContentProps {
   userEmail: string | null
@@ -28,14 +27,7 @@ export function AccountInitial({ userEmail }: { userEmail: string | null }) {
 }
 
 export function AccountMenuContent({ userEmail, side, align = 'start', children }: AccountMenuContentProps) {
-  const router = useRouter()
-
-  async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.refresh()
-    router.push('/auth/signin')
-  }
+  const signOut = useSignOut()
 
   return (
     <DropdownMenuContent side={side} align={align} className="w-56">
@@ -55,7 +47,7 @@ export function AccountMenuContent({ userEmail, side, align = 'start', children 
       )}
       <ThemeMenu />
       <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={handleSignOut}>
+      <DropdownMenuItem onClick={signOut}>
         <LogOut className="mr-2 h-4 w-4" />
         Sign out
       </DropdownMenuItem>
