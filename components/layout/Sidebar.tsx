@@ -1,145 +1,63 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  LayoutDashboard,
-  Wine,
-  Map,
-  Info,
-  Menu,
-  X,
-  LogOut,
-  ChevronsUpDown,
-} from 'lucide-react'
-import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { ThemeMenu } from '@/components/layout/ThemeMenu'
+import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { ChevronsUpDown } from 'lucide-react'
+import { AccountInitial, AccountMenuContent } from './AccountMenuContent'
+import { aboutNavItem, isNavActive, primaryNavItems } from './nav-items'
 
 interface SidebarProps {
   currentPath: string
   userEmail: string | null
 }
 
+const navItems = [...primaryNavItems, aboutNavItem]
+
+// Desktop only — on mobile, BottomNav covers every destination.
 export function Sidebar({ currentPath, userEmail }: SidebarProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const router = useRouter()
-
-  const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/wines', label: 'Wines', icon: Wine },
-    { href: '/map', label: 'Map', icon: Map },
-    { href: '/about', label: 'About', icon: Info },
-  ]
-
-  const isActive = (href: string) => currentPath === href || currentPath.startsWith(href + '/')
-
-  async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.refresh()
-    router.push('/auth/signin')
-  }
-
   return (
-    <>
-      {/* Mobile menu button */}
-      <div className="fixed top-4 left-4 z-40 md:hidden">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsOpen(!isOpen)}
-          aria-label="Toggle menu"
-        >
-          {isOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <Menu className="h-6 w-6" />
-          )}
-        </Button>
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card md:flex">
+      {/* Logo/Brand */}
+      <div className="p-6 border-b border-border">
+        <h1 className="text-xl font-bold text-foreground">DamnUncorked</h1>
+        <p className="text-xs text-muted-foreground mt-1">Wine Logger</p>
       </div>
 
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-2">
+        {navItems.map(({ href, label, icon: Icon }) => (
+          <Link key={href} href={href}>
+            <Button
+              variant={isNavActive(currentPath, href) ? 'default' : 'ghost'}
+              className="w-full justify-start"
+            >
+              <Icon className="mr-2 h-4 w-4" />
+              {label}
+            </Button>
+          </Link>
+        ))}
+      </nav>
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed md:relative w-64 h-screen bg-card border-r border-border flex flex-col transition-all duration-300 z-40 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
-      >
-        {/* Logo/Brand */}
-        <div className="p-6 border-b border-border">
-          <h1 className="text-xl font-bold text-foreground">DamnUncorked</h1>
-          <p className="text-xs text-muted-foreground mt-1">Wine Logger</p>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2">
-          {navItems.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href} onClick={() => setIsOpen(false)}>
-              <Button
-                variant={isActive(href) ? 'default' : 'ghost'}
-                className="w-full justify-start"
-              >
-                <Icon className="mr-2 h-4 w-4" />
-                {label}
-              </Button>
-            </Link>
-          ))}
-        </nav>
-
-        {/* Footer — account menu */}
-        <div className="p-4 border-t border-border">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-2 px-2"
-              >
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
-                  {userEmail ? userEmail[0].toUpperCase() : '?'}
-                </span>
-                <span className="flex-1 truncate text-left text-sm">
-                  {userEmail ?? 'Account'}
-                </span>
-                <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              {userEmail && (
-                <>
-                  <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
-                    {userEmail}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-              <ThemeMenu />
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <p className="mt-2 px-2 text-xs text-muted-foreground">v0.1.0</p>
-        </div>
-      </aside>
-    </>
+      {/* Footer — account menu */}
+      <div className="p-4 border-t border-border">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-2 px-2"
+            >
+              <AccountInitial userEmail={userEmail} />
+              <span className="flex-1 truncate text-left text-sm">
+                {userEmail ?? 'Account'}
+              </span>
+              <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <AccountMenuContent userEmail={userEmail} />
+        </DropdownMenu>
+        <p className="mt-2 px-2 text-xs text-muted-foreground">v0.1.0</p>
+      </div>
+    </aside>
   )
 }

@@ -52,12 +52,11 @@ function buildCrumbs(path: string, labels: Record<string, string>): Crumb[] {
 export function TopBar({ currentPath }: TopBarProps) {
   const crumbs = buildCrumbs(currentPath, useBreadcrumbLabels())
   // On mobile, trails longer than two collapse their middle crumbs behind an
-  // ellipsis so the first and current crumbs always fit beside the hamburger.
+  // ellipsis so the first and current crumbs always fit on one line.
   const collapsible = crumbs.length > 2
 
   return (
-    // pl-16 on mobile clears the fixed hamburger button from Sidebar.tsx.
-    <header className="flex h-16 shrink-0 items-center border-b border-border bg-card pl-16 pr-4 md:px-6">
+    <header className="flex h-16 shrink-0 items-center border-b border-border bg-card px-4 md:px-6">
       <Breadcrumb className="min-w-0">
         <BreadcrumbList className="flex-nowrap">
           {crumbs.map((crumb, i) => {
