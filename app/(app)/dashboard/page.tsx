@@ -6,7 +6,7 @@ import { getWinesForUser } from '@/lib/supabase/queries'
 import { Plus } from 'lucide-react'
 
 export default async function Dashboard() {
-  const wines = await getWinesForUser()
+  const { wines } = await getWinesForUser()
 
   // Get top 3 wines sorted by rating
   const topWines = [...wines]

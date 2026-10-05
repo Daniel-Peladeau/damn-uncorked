@@ -32,4 +32,8 @@ export type Wine = {
   tastingNotes?: string
   foodPairing?: string
   wouldBuyAgain?: boolean
+  // Tracked separately from the ratings above: a review row can exist with
+  // every rating left blank, so "no overall score" doesn't mean "unreviewed".
+  reviewedByMe: boolean
+  reviewedByPartner: boolean
 }
