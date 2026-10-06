@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import type { Wine } from '@/lib/types/wine'
+import { WINE_TYPES, type Wine, type WineType } from '@/lib/types/wine'
 import type { SortOption } from '@/lib/types/sort'
+import { hasActiveFilters, type WineFilters } from '@/lib/types/filters'
 import { foldDiacritics } from '@/lib/utils'
 
 // No generated Database types exist in this repo yet, so the query result is
@@ -26,7 +27,8 @@ const WINE_SELECT = `
     tasting_notes,
     food_pairing,
     would_buy_again
-  )
+  ),
+  review_authors:reviews ( user_id )
 `
 
 type WineVintageRow = {
@@ -54,6 +56,11 @@ type WineVintageRow = {
     food_pairing: string | null
     would_buy_again: boolean | null
   }[]
+  // A second, unfiltered embed of the same relation (the user_id filter
+  // above targets only the unaliased `reviews` embed) so the
+  // "reviewed by both" filter can see whether the partner has reviewed too.
+  // Only user_id is selected — the partner's scores aren't needed here.
+  review_authors: { user_id: string }[]
 }
 
 // Case-insensitive, diacritic-insensitive substring match across every
@@ -78,7 +85,15 @@ function matchesSearch(wine: Wine, query: string): boolean {
   )
 }
 
-function mapRowToWine(row: WineVintageRow): Wine {
+function matchesFilters(wine: Wine, filters: WineFilters): boolean {
+  if (filters.types.length > 0 && !filters.types.includes(wine.type)) return false
+  if (filters.buyAgain && wine.wouldBuyAgain !== true) return false
+  if (filters.status === 'unreviewed' && wine.reviewedByMe) return false
+  if (filters.status === 'both' && !(wine.reviewedByMe && wine.reviewedByPartner)) return false
+  return true
+}
+
+function mapRowToWine(row: WineVintageRow, userId: string): Wine {
   const review = row.reviews[0]
 
   return {
@@ -101,15 +116,32 @@ function mapRowToWine(row: WineVintageRow): Wine {
     tastingNotes: review?.tasting_notes ?? undefined,
     foodPairing: review?.food_pairing ?? undefined,
     wouldBuyAgain: review?.would_buy_again ?? undefined,
+    reviewedByMe: review !== undefined,
+    reviewedByPartner: row.review_authors.some((author) => author.user_id !== userId),
   }
 }
 
-export async function getWinesForUser(sortBy: SortOption = 'recent', search?: string): Promise<Wine[]> {
+export type WineList = {
+  wines: Wine[]
+  // Size and types of the whole collection, before search/filters, so the
+  // page can tell "nothing logged yet" from "nothing matches" and offer
+  // only the type chips that would return something.
+  totalCount: number
+  loggedTypes: WineType[]
+}
+
+const EMPTY_WINE_LIST: WineList = { wines: [], totalCount: 0, loggedTypes: [] }
+
+export async function getWinesForUser(
+  sortBy: SortOption = 'recent',
+  search?: string,
+  filters?: WineFilters
+): Promise<WineList> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return []
+  if (!user) return EMPTY_WINE_LIST
 
   const baseQuery = supabase.from('wine_vintages').select(WINE_SELECT).eq('reviews.user_id', user.id)
 
@@ -135,11 +167,19 @@ export async function getWinesForUser(sortBy: SortOption = 'recent', search?: st
   // three levels of embedded relation (wines, wineries, and the doubly-
   // nested wine_grapes -> grapes) — not something a single Postgrest .or()
   // can express cleanly. Filtered in JS after mapping instead, same
-  // reasoning as the rating sort below.
-  let wines = (data ?? []).map(mapRowToWine)
+  // reasoning as the rating sort below. The filter chips run here too
+  // rather than as Postgrest filters: the full list is already in hand to
+  // compute loggedTypes, and keeping every narrowing step in one place
+  // leaves a single spot for #80 to move into SQL.
+  const allWines = (data ?? []).map((row) => mapRowToWine(row, user.id))
+  let wines = allWines
 
   if (search) {
     wines = wines.filter((wine) => matchesSearch(wine, search))
+  }
+
+  if (filters && hasActiveFilters(filters)) {
+    wines = wines.filter((wine) => matchesFilters(wine, filters))
   }
 
   if (sortBy === 'rating') {
@@ -149,7 +189,13 @@ export async function getWinesForUser(sortBy: SortOption = 'recent', search?: st
     wines.sort((a, b) => (b.ratings.overall ?? -Infinity) - (a.ratings.overall ?? -Infinity))
   }
 
-  return wines
+  const typesInLog = new Set(allWines.map((wine) => wine.type))
+
+  return {
+    wines,
+    totalCount: allWines.length,
+    loggedTypes: WINE_TYPES.filter((type) => typesInLog.has(type)),
+  }
 }
 
 export async function getWineById(vintageId: string): Promise<Wine | null> {
@@ -170,5 +216,5 @@ export async function getWineById(vintageId: string): Promise<Wine | null> {
   if (error) throw error
   if (!data) return null
 
-  return mapRowToWine(data)
+  return mapRowToWine(data, user.id)
 }
