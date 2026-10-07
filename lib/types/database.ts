@@ -193,6 +193,7 @@ export type Database = {
         Row: {
           abv: number | null
           created_at: string | null
+          created_by: string | null
           drink_window_end: number | null
           drink_window_start: number | null
           id: string
@@ -204,6 +205,7 @@ export type Database = {
         Insert: {
           abv?: number | null
           created_at?: string | null
+          created_by?: string | null
           drink_window_end?: number | null
           drink_window_start?: number | null
           id?: string
@@ -215,6 +217,7 @@ export type Database = {
         Update: {
           abv?: number | null
           created_at?: string | null
+          created_by?: string | null
           drink_window_end?: number | null
           drink_window_start?: number | null
           id?: string

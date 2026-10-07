@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
+import { Trash2 } from 'lucide-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -14,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { deleteReview, type DeleteActionState } from './actions'
+import { deleteReview, deleteWine, type DeleteActionState } from './actions'
 
 const initialState: DeleteActionState = { error: null }
 
@@ -49,6 +50,38 @@ export function DeleteReviewButton({ vintageId, reviewId }: { vintageId: string;
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <DeleteSubmitButton label="Delete Review" />
+            </AlertDialogFooter>
+          </form>
+        </AlertDialogContent>
+      </AlertDialog>
+      {state.error && <p className="mt-2 text-sm text-destructive">{state.error}</p>}
+    </div>
+  )
+}
+
+export function DeleteWineButton({ vintageId, wineName }: { vintageId: string; wineName: string }) {
+  const [state, formAction] = useActionState(deleteWine.bind(null, vintageId), initialState)
+
+  return (
+    <div>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive" size="sm" className="gap-1.5">
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+            Delete Wine
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {wineName}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes this wine and every review of it, including the other person&apos;s. This can&apos;t be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <form action={formAction}>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <DeleteSubmitButton label="Delete Wine" />
             </AlertDialogFooter>
           </form>
         </AlertDialogContent>
