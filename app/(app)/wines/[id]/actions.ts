@@ -1,5 +1,6 @@
 'use server'
 
+import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
@@ -67,4 +68,62 @@ export async function deleteReview(
   revalidatePath('/wines')
   revalidatePath('/dashboard')
   return { error: null }
+}
+
+// Bound with the vintage id before being passed to useActionState. Deletes
+// the wine_vintages row itself; reviews_wine_vintage_id_fkey is ON DELETE
+// CASCADE, so both users' reviews for it are removed automatically. The
+// parent `wines`/`wineries` rows are untouched (a wine can have other
+// vintages, and a winery can have other wines). The trailing two params
+// exist only to satisfy useActionState's required action signature.
+//
+// NOTE for #41 (label photo upload via Supabase Storage): label_image_url is
+// currently always a hotlinked external URL (Open Food Facts, see
+// lib/wine-photo.ts) — nothing in this codebase writes to Supabase Storage
+// yet, so there's no Storage object to clean up here today. Once #41 adds
+// Storage-backed uploads, this action will need a best-effort
+// supabase.storage.from(...).remove(...) call alongside the row delete, or
+// deleted vintages will leak orphaned Storage objects.
+export async function deleteWine(
+  vintageId: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _prevState: DeleteActionState,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _formData: FormData
+): Promise<DeleteActionState> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'You must be signed in to delete a wine.' }
+  }
+
+  // Scoped to created_by as well as the id, same reasoning as deleteReview:
+  // the RLS policy is what actually enforces "only whoever logged it", but
+  // the query states that intent too. `.select('id')` distinguishes a real
+  // deletion from a silent zero-row no-op (RLS-filtered rows return success).
+  const { data: deleted, error } = await supabase
+    .from('wine_vintages')
+    .delete()
+    .eq('id', vintageId)
+    .eq('created_by', user.id)
+    .select('id')
+
+  if (error) {
+    console.error(`Failed to delete wine vintage "${vintageId}":`, error)
+    return { error: GENERIC_DELETE_ERROR }
+  }
+
+  if (!deleted || deleted.length === 0) {
+    console.error(`Delete wine vintage "${vintageId}" matched no rows (already deleted, or not logged by "${user.id}").`)
+    return { error: "This wine couldn't be deleted. It may already be gone, or it was logged by someone else." }
+  }
+
+  revalidatePath('/wines')
+  revalidatePath('/dashboard')
+  revalidatePath('/map')
+  redirect('/wines')
 }

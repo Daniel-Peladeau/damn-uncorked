@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ArrowLeft, Star, MapPin } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import type { Database } from '@/lib/types/database'
-import { DeleteReviewButton } from './DeleteControls'
+import { DeleteReviewButton, DeleteWineButton } from './DeleteControls'
 import { WineBreadcrumbLabel } from '@/components/layout/BreadcrumbLabels'
 
 interface WineDetailPageProps {
@@ -67,6 +67,7 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
       id,
       vintage_year,
       label_image_url,
+      created_by,
       wines (
         name,
         wine_type,
@@ -125,6 +126,9 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
   // only card rendered at all — once the "add your review" prompt joins it
   // as a second grid item, both should sit at normal half-width.
   const isLoneCard = allReviews.length === 1 && hasOwnReview
+  // Mirrors the wine_vintages DELETE policy (only whoever logged it) so the
+  // button isn't offered to someone RLS would refuse anyway.
+  const canDeleteWine = user !== null && vintage.created_by === user.id
 
   return (
     <div className="space-y-8">
@@ -142,6 +146,7 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
       <PageHeader
         title={wine.name}
         description={`${winery?.region ?? 'Unknown region'} • ${vintage.vintage_year ?? 'Unknown vintage'}`}
+        action={canDeleteWine ? <DeleteWineButton vintageId={vintage.id} wineName={wine.name} /> : undefined}
       />
 
       <div className="space-y-6">
