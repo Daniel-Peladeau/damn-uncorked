@@ -6,11 +6,11 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { PageHeader } from '@/components/PageHeader'
+import { WineTypeField } from '@/components/forms/WineTypeField'
 import { ArrowLeft } from 'lucide-react'
 import { updateWineEntry, type EditWineFormState } from './actions'
-import { WINE_TYPES, type WineType } from '@/lib/types/wine'
+import type { WineType } from '@/lib/types/wine'
 
 const initialState: EditWineFormState = { error: null }
 
@@ -88,21 +88,7 @@ export function EditWineForm({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="type">Type *</Label>
-              <Select name="type" required defaultValue={initialValues.type}>
-                <SelectTrigger id="type" className="w-full">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {WINE_TYPES.map((wineType) => (
-                    <SelectItem key={wineType} value={wineType}>
-                      {wineType.charAt(0).toUpperCase() + wineType.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <WineTypeField defaultValue={initialValues.type} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

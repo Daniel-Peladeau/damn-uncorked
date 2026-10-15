@@ -16,8 +16,8 @@ import type { PostgrestError } from '@supabase/supabase-js'
 // "*". There's no way to preserve a literal "*" through `.ilike()` from the
 // client side. Net effect: a name containing "*" will never match its own
 // previously-inserted row on lookup, so it takes the "create" branch every
-// time — a duplicate row, same low-severity failure mode as the accepted
-// find-or-create race condition below, not a crash.
+// time — which fails the save on the wineries/wines unique constraints, or
+// inserts a duplicate grape (see the race-condition note below).
 export function escapeIlikePattern(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/[%_]/g, (match) => `\\${match}`)
 }
@@ -37,13 +37,15 @@ export type LookupResult<Row> = { data: Row | null; error: PostgrestError | null
 //
 // NOTE (accepted race condition): this is a select-then-insert, not an atomic
 // upsert, so two near-simultaneous submissions for a brand-new name could
-// both miss the lookup and insert duplicate rows. With only two users on this
-// app that's unlikely enough to accept for now rather than adding an
-// `.upsert()`/unique-constraint dependency we can't verify against the
-// currently-paused database. Every lookup site uses `.limit(1)` so that, if
-// a duplicate ever does exist, resolution degrades to "pick one" instead of
-// `.maybeSingle()` hard-erroring on >1 rows and permanently breaking every
-// future lookup for that name.
+// both miss the lookup. For wineries and wines (unique on lower(name)),
+// vintages and wine_grapes, the second insert then fails its unique
+// constraint and that save shows the generic error. grapes.name is unique
+// only case-sensitively, so "Merlot" and "merlot" racing could still insert
+// two rows. With only two users this is unlikely enough to accept. Every
+// lookup site uses `.limit(1)` so that, if a duplicate ever does exist,
+// resolution degrades to "pick one" instead of `.maybeSingle()`
+// hard-erroring on >1 rows and permanently breaking every future lookup for
+// that name.
 export async function findOrCreateByName<Row extends { id: string }>(
   entityLabel: string,
   name: string,
