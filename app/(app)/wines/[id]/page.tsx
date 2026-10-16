@@ -1,51 +1,16 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/PageHeader'
 import { createClient } from '@/lib/supabase/server'
-import { ArrowLeft, Star, MapPin } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { notFound } from 'next/navigation'
-import type { Database } from '@/lib/types/database'
-import { DeleteReviewButton, DeleteWineButton } from './DeleteControls'
+import { DeleteWineButton } from './DeleteControls'
 import { WineBreadcrumbLabel } from '@/components/layout/BreadcrumbLabels'
+import { WineDetailsCard } from './WineDetailsCard'
+import { ReviewsSection } from './ReviewsSection'
 
 interface WineDetailPageProps {
   params: Promise<{ id: string }>
-}
-
-// Narrowed to just the columns the query below actually selects — the full
-// table Row also has currency/price_paid/purchase_location/tasted_on/
-// updated_at, which aren't fetched here.
-type Review = Pick<
-  Database['public']['Tables']['reviews']['Row'],
-  | 'id'
-  | 'wine_vintage_id'
-  | 'user_id'
-  | 'appearance'
-  | 'nose'
-  | 'palate'
-  | 'finish'
-  | 'value'
-  | 'overall'
-  | 'tasting_notes'
-  | 'food_pairing'
-  | 'would_buy_again'
-  | 'occasion'
-  | 'created_at'
->
-
-const RATING_CATEGORIES = [
-  { label: 'Appearance', key: 'appearance' as const },
-  { label: 'Nose', key: 'nose' as const },
-  { label: 'Palate', key: 'palate' as const },
-  { label: 'Finish', key: 'finish' as const },
-  { label: 'Value', key: 'value' as const },
-]
-
-// Rounded to 1 decimal place — these are averages of small integers (1-5 or
-// 1-10), so more precision would just be noise.
-function average(values: number[]): number {
-  return Math.round((values.reduce((sum, v) => sum + v, 0) / values.length) * 10) / 10
 }
 
 export default async function WineDetailPage({ params }: WineDetailPageProps) {
@@ -112,20 +77,6 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
     console.error(`Failed to load reviews for vintage "${vintage.id}":`, reviewsError)
   }
 
-  // The signed-in user's own review (if present) always renders first —
-  // among only ever 0-2 rows (one review per user per vintage), there's no
-  // other meaningful order to preserve.
-  const allReviews = [...(reviews ?? [])].sort((a, b) => {
-    const aOwn = a.user_id === user?.id
-    const bOwn = b.user_id === user?.id
-    return aOwn === bOwn ? 0 : aOwn ? -1 : 1
-  })
-
-  const hasOwnReview = allReviews.some((review) => review.user_id === user?.id)
-  // A lone real review card only spans the full grid width when it's the
-  // only card rendered at all — once the "add your review" prompt joins it
-  // as a second grid item, both should sit at normal half-width.
-  const isLoneCard = allReviews.length === 1 && hasOwnReview
   // Mirrors the wine_vintages DELETE policy (only whoever logged it) so the
   // button isn't offered to someone RLS would refuse anyway.
   const canDeleteWine = user !== null && vintage.created_by === user.id
@@ -150,240 +101,23 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
       />
 
       <div className="space-y-6">
-        {/* Wine Details Card */}
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">Wine Details</h2>
-            <Link href={`/wines/${vintage.id}/edit`}>
-              <Button variant="ghost" size="sm">
-                Edit
-              </Button>
-            </Link>
-          </div>
-          <div className="flex gap-6">
-            {vintage.label_image_url && (
-              <Image
-                src={vintage.label_image_url}
-                alt={`${wine.name} label`}
-                width={160}
-                height={224}
-                className="h-56 w-40 flex-shrink-0 rounded object-contain"
-              />
-            )}
-            <div className="flex-1 space-y-4">
-              {(winery?.region || winery?.country) && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Region</p>
-                    <p className="font-medium text-foreground">
-                      {[winery?.region, winery?.country].filter(Boolean).join(', ')}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {grapes.length > 0 && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Grapes</p>
-                  <div className="flex flex-wrap gap-2">
-                    {grapes.map((grape) => (
-                      <span
-                        key={grape}
-                        className="inline-block rounded bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground"
-                      >
-                        {grape}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Type</p>
-                <p className="capitalize font-medium text-foreground">{wine.wine_type}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <WineDetailsCard
+          vintageId={vintage.id}
+          name={wine.name}
+          wineType={wine.wine_type}
+          labelImageUrl={vintage.label_image_url}
+          region={winery?.region ?? null}
+          country={winery?.country ?? null}
+          grapes={grapes}
+        />
 
-        {/* Reviews — side by side so both users' independent reviews of the
-            same bottle are visible at once, rather than one replacing the
-            other or requiring a tab switch. */}
         {reviewsError ? (
           <div className="rounded-lg border border-border bg-card p-6">
             <p className="text-muted-foreground">Couldn&apos;t load reviews right now. Please try again.</p>
           </div>
         ) : (
-          <>
-            {/* Combined score is computed here for display only — per
-                CLAUDE.md, it's never persisted, so it's recomputed from the
-                two reviews on every render rather than read from a stored
-                column. */}
-            {allReviews.length === 2 && <CombinedRatingCard reviews={allReviews} />}
-
-            <div className="grid gap-6 md:grid-cols-2">
-              {allReviews.map((review) => (
-                <ReviewCard
-                  key={review.id}
-                  review={review}
-                  isOwnReview={review.user_id === user?.id}
-                  vintageId={vintage.id}
-                  className={isLoneCard ? 'md:col-span-2' : undefined}
-                />
-              ))}
-              {!hasOwnReview && (
-                <PromptReviewCard
-                  vintageId={vintage.id}
-                  className={allReviews.length === 0 ? 'md:col-span-2' : undefined}
-                />
-              )}
-            </div>
-          </>
+          <ReviewsSection reviews={reviews ?? []} userId={user?.id ?? null} vintageId={vintage.id} />
         )}
-      </div>
-    </div>
-  )
-}
-
-function PromptReviewCard({ vintageId, className }: { vintageId: string; className?: string }) {
-  return (
-    <div
-      className={`flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card p-6 text-center ${className ?? ''}`}
-    >
-      <p className="text-muted-foreground">You haven&apos;t reviewed this wine yet.</p>
-      <Link href={`/wines/${vintageId}/review`}>
-        <Button size="sm">Add Your Review</Button>
-      </Link>
-    </div>
-  )
-}
-
-function ReviewCard({
-  review,
-  isOwnReview,
-  vintageId,
-  className,
-}: {
-  review: Review
-  isOwnReview: boolean
-  vintageId: string
-  className?: string
-}) {
-  return (
-    <div className={`rounded-lg border border-border bg-card p-6 ${className ?? ''}`}>
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">{isOwnReview ? 'Your Review' : 'Their Review'}</h2>
-        {isOwnReview && (
-          <div className="flex items-center gap-1">
-            <Link href={`/wines/${vintageId}/review`}>
-              <Button variant="ghost" size="sm">
-                Edit
-              </Button>
-            </Link>
-            <DeleteReviewButton vintageId={vintageId} reviewId={review.id} />
-          </div>
-        )}
-      </div>
-
-      <div className="mb-6 flex items-end gap-2">
-        <div className="text-4xl font-bold text-foreground">{review.overall ?? '—'}</div>
-        <div className="mb-1 text-sm text-muted-foreground">/10 overall</div>
-      </div>
-      <div className="mb-6 flex items-center gap-1">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            className={`h-5 w-5 ${
-              i < Math.round((review.overall ?? 0) / 2) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
-            }`}
-          />
-        ))}
-      </div>
-
-      <div className="space-y-3">
-        {RATING_CATEGORIES.map(({ label, key }) => (
-          <div key={key}>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-sm text-muted-foreground">{label}</p>
-              <p className="text-sm font-medium text-foreground">{review[key] ?? '—'}/5</p>
-            </div>
-            <div className="h-2 rounded-full bg-secondary">
-              <div className="h-full rounded-full bg-primary" style={{ width: `${((review[key] ?? 0) / 5) * 100}%` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {review.tasting_notes && (
-        <div className="mt-4">
-          <p className="text-sm text-muted-foreground mb-1">Tasting Notes</p>
-          <p className="text-muted-foreground italic">&quot;{review.tasting_notes}&quot;</p>
-        </div>
-      )}
-
-      {review.food_pairing && (
-        <div className="mt-4">
-          <p className="text-sm text-muted-foreground mb-1">Food Pairing</p>
-          <p className="text-muted-foreground">{review.food_pairing}</p>
-        </div>
-      )}
-
-      {review.occasion && (
-        <div className="mt-4">
-          <p className="text-sm text-muted-foreground mb-1">Occasion</p>
-          <p className="text-muted-foreground">{review.occasion}</p>
-        </div>
-      )}
-
-      {review.would_buy_again !== null && (
-        <div className="mt-4">
-          <p className="text-sm text-muted-foreground">Would Buy Again</p>
-          <p className="mt-1 font-semibold text-foreground">{review.would_buy_again ? '✓ Yes' : '✗ No'}</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// Combined score is computed, not stored (per CLAUDE.md) — this only ever
-// renders once both reviews exist, so `reviews` is always exactly the two
-// rows in practice, but the averaging itself works for any count.
-function CombinedRatingCard({ reviews }: { reviews: Review[] }) {
-  const combinedOverall = average(reviews.map((r) => r.overall ?? 0))
-
-  return (
-    <div className="rounded-lg border border-border bg-card p-6">
-      <h2 className="mb-4 text-lg font-semibold text-foreground">Combined Rating</h2>
-
-      <div className="mb-6 flex items-end gap-2">
-        <div className="text-4xl font-bold text-foreground">{combinedOverall}</div>
-        <div className="mb-1 text-sm text-muted-foreground">/10 overall</div>
-      </div>
-      <div className="mb-6 flex items-center gap-1">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            className={`h-5 w-5 ${
-              i < Math.round(combinedOverall / 2) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
-            }`}
-          />
-        ))}
-      </div>
-
-      <div className="space-y-3">
-        {RATING_CATEGORIES.map(({ label, key }) => {
-          const combinedValue = average(reviews.map((r) => r[key] ?? 0))
-          return (
-            <div key={key}>
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-sm text-muted-foreground">{label}</p>
-                <p className="text-sm font-medium text-foreground">{combinedValue}/5</p>
-              </div>
-              <div className="h-2 rounded-full bg-secondary">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${(combinedValue / 5) * 100}%` }} />
-              </div>
-            </div>
-          )
-        })}
       </div>
     </div>
   )

@@ -27,3 +27,7 @@ export async function createClient() {
     }
   )
 }
+
+// For helpers that take the request-scoped client as a parameter, so every
+// query they run still carries the signed-in user's session (and RLS).
+export type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>

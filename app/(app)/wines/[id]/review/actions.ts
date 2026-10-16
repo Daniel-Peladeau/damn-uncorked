@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getTrimmedString, getRating } from '@/lib/reviews/validation'
+import { INVALID_RATINGS_ERROR, parseReviewFields } from '@/lib/reviews/validation'
 
 export type ReviewFormState = {
   error: string | null
@@ -20,31 +20,10 @@ export async function saveReview(
   _prevState: ReviewFormState,
   formData: FormData
 ): Promise<ReviewFormState> {
-  const appearance = getRating(formData, 'appearance', 1, 5)
-  const nose = getRating(formData, 'nose', 1, 5)
-  const palate = getRating(formData, 'palate', 1, 5)
-  const finish = getRating(formData, 'finish', 1, 5)
-  const value = getRating(formData, 'value', 1, 5)
-  const overall = getRating(formData, 'overall', 1, 10)
-
-  if (
-    appearance === null ||
-    nose === null ||
-    palate === null ||
-    finish === null ||
-    value === null ||
-    overall === null
-  ) {
-    return { error: 'Please provide valid ratings (1–5 for each category, 1–10 for overall).' }
+  const review = parseReviewFields(formData)
+  if (!review) {
+    return { error: INVALID_RATINGS_ERROR }
   }
-
-  const tastingNotesRaw = getTrimmedString(formData, 'tastingNotes')
-  const foodPairingRaw = getTrimmedString(formData, 'foodPairing')
-  const occasionRaw = getTrimmedString(formData, 'occasion')
-  const tastingNotes = tastingNotesRaw.length > 0 ? tastingNotesRaw : null
-  const foodPairing = foodPairingRaw.length > 0 ? foodPairingRaw : null
-  const occasion = occasionRaw.length > 0 ? occasionRaw : null
-  const wouldBuyAgain = formData.get('wouldBuyAgain') === 'on'
 
   const supabase = await createClient()
 
@@ -76,27 +55,13 @@ export async function saveReview(
   }
 
   // upsert rather than a separate select-then-insert-or-update: the
-  // (wine_vintage_id, user_id) pair is unique per the "one review per user
-  // per vintage" constraint referenced elsewhere in this codebase (see
-  // app/(app)/wines/new/actions.ts), so this atomically creates a first
+  // (user_id, wine_vintage_id) pair is unique (reviews_user_id_wine_vintage_id_key,
+  // "one review per user per vintage"), so this atomically creates a first
   // review or overwrites the signed-in user's existing one for this vintage
   // — never touches the other user's row, since user_id is always the
   // authenticated caller's own id, not client-supplied.
   const { error: upsertError } = await supabase.from('reviews').upsert(
-    {
-      wine_vintage_id: vintageId,
-      user_id: user.id,
-      appearance,
-      nose,
-      palate,
-      finish,
-      value,
-      overall,
-      tasting_notes: tastingNotes,
-      food_pairing: foodPairing,
-      occasion,
-      would_buy_again: wouldBuyAgain,
-    },
+    { wine_vintage_id: vintageId, user_id: user.id, ...review },
     { onConflict: 'wine_vintage_id,user_id' }
   )
 

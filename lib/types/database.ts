@@ -1,9 +1,8 @@
 // Generated via the Supabase MCP `generate_typescript_types` tool against the
-// live schema (project was paused when an earlier hand-authored version of
-// this file was written — that version had several column names wrong, e.g.
-// `wines.type`/`wine_vintages.vintage` instead of the real `wine_type`/
-// `vintage_year`). Regenerate this file the same way after future schema
-// changes rather than hand-editing it.
+// live schema. Regenerate this file the same way after future schema changes
+// rather than hand-editing it — an earlier hand-written version had several
+// column names wrong (e.g. `wines.type`/`wine_vintages.vintage` instead of the
+// real `wine_type`/`vintage_year`).
 export type Json =
   | string
   | number
