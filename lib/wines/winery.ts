@@ -66,7 +66,7 @@ export async function resolveWinery(
         .eq('id', wineryId)
 
       if (error) {
-        console.error(`Failed to update winery "${name}" details:`, error)
+        console.error('Failed to update winery "%s" details:', name, error)
         return null
       }
     }

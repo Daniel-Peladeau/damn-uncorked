@@ -36,7 +36,7 @@ async function searchOpenFoodFacts(query: string): Promise<string | null> {
 
     return first.image_front_url ?? first.image_url ?? null
   } catch (error) {
-    console.error(`Failed to fetch wine photo for "${query}":`, error)
+    console.error('Failed to fetch wine photo for "%s":', query, error)
     return null
   }
 }

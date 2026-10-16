@@ -33,7 +33,7 @@ export async function resolveWine(
     const { error } = await supabase.from('wines').update({ wine_type: type }).eq('id', wineId)
 
     if (error) {
-      console.error(`Failed to update wine "${name}" type:`, error)
+      console.error('Failed to update wine "%s" type:', name, error)
       return null
     }
   }

@@ -33,7 +33,7 @@ export default async function EditWinePage({ params }: EditWinePageProps) {
     .maybeSingle()
 
   if (vintageError) {
-    console.error(`Failed to load wine vintage "${id}" for edit form:`, vintageError)
+    console.error('Failed to load wine vintage "%s" for edit form:', id, vintageError)
     throw new Error('Failed to load wine details.')
   }
 
