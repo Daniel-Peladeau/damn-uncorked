@@ -85,7 +85,7 @@ export async function updateWineEntry(
       if (wineUpdateError.code === '23505') {
         return { error: 'A wine with this name already exists for this winery and type.' }
       }
-      console.error(`Failed to update wine "${wine.id}":`, wineUpdateError)
+      console.error('Failed to update wine "%s":', wine.id, wineUpdateError)
       return { error: GENERIC_SAVE_ERROR }
     }
   }

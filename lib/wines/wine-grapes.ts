@@ -27,7 +27,7 @@ async function linkGrapeToWine(supabase: ServerSupabaseClient, wineId: string, g
     .maybeSingle()
 
   if (lookupError) {
-    console.error(`Failed to look up existing grape link for "${grapeName}":`, lookupError)
+    console.error('Failed to look up existing grape link for "%s":', grapeName, lookupError)
     return false
   }
 
@@ -38,7 +38,7 @@ async function linkGrapeToWine(supabase: ServerSupabaseClient, wineId: string, g
   const { error: linkError } = await supabase.from('wine_grapes').insert({ wine_id: wineId, grape_id: grapeId })
 
   if (linkError) {
-    console.error(`Failed to link grape "${grapeName}" to wine "${wineId}":`, linkError)
+    console.error('Failed to link grape "%s" to wine "%s":', grapeName, wineId, linkError)
     return false
   }
 
@@ -71,7 +71,7 @@ export async function reconcileWineGrapes(
     .eq('wine_id', wineId)
 
   if (currentLinksError) {
-    console.error(`Failed to look up current grapes for wine "${wineId}":`, currentLinksError)
+    console.error('Failed to look up current grapes for wine "%s":', wineId, currentLinksError)
     return false
   }
 
@@ -94,7 +94,7 @@ export async function reconcileWineGrapes(
           .in('grape_id', grapeIdsToRemove)
           .then(({ error }) => {
             if (error) {
-              console.error(`Failed to unlink removed grapes from wine "${wineId}":`, error)
+              console.error('Failed to unlink removed grapes from wine "%s":', wineId, error)
               return false
             }
             return true
