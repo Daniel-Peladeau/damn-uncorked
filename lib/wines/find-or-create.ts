@@ -55,7 +55,7 @@ export async function findOrCreateByName<Row extends { id: string }>(
   const { data: existing, error: lookupError } = await lookup()
 
   if (lookupError) {
-    console.error(`Failed to look up ${entityLabel} "${name}":`, lookupError)
+    console.error('Failed to look up %s "%s":', entityLabel, name, lookupError)
     return { ok: false }
   }
 
@@ -66,7 +66,7 @@ export async function findOrCreateByName<Row extends { id: string }>(
   const { data: created, error: insertError } = await create()
 
   if (insertError || !created) {
-    console.error(`Failed to create ${entityLabel} "${name}":`, insertError)
+    console.error('Failed to create %s "%s":', entityLabel, name, insertError)
     return { ok: false }
   }
 

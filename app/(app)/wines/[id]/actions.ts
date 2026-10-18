@@ -113,7 +113,7 @@ export async function deleteWine(
     .select('id')
 
   if (error) {
-    console.error(`Failed to delete wine vintage "${vintageId}":`, error)
+    console.error('Failed to delete wine vintage "%s":', vintageId, error)
     return { error: GENERIC_DELETE_ERROR }
   }
 

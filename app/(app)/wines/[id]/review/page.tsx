@@ -28,7 +28,7 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
     .maybeSingle()
 
   if (vintageError) {
-    console.error(`Failed to load wine vintage "${id}" for review form:`, vintageError)
+    console.error('Failed to load wine vintage "%s" for review form:', id, vintageError)
     throw new Error('Failed to load wine details.')
   }
 
@@ -44,7 +44,7 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
     .maybeSingle()
 
   if (reviewError) {
-    console.error(`Failed to load existing review for vintage "${id}":`, reviewError)
+    console.error('Failed to load existing review for vintage "%s":', id, reviewError)
     throw new Error('Failed to load your review.')
   }
 

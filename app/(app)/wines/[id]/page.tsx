@@ -50,7 +50,7 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
   // filters absent ones, by design), so that case still falls through to
   // notFound() below, but an actual error shouldn't silently render as a 404.
   if (vintageError) {
-    console.error(`Failed to load wine vintage "${id}":`, vintageError)
+    console.error('Failed to load wine vintage "%s":', id, vintageError)
     throw new Error('Failed to load wine details.')
   }
 
@@ -74,7 +74,7 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
     .order('created_at', { ascending: true })
 
   if (reviewsError) {
-    console.error(`Failed to load reviews for vintage "${vintage.id}":`, reviewsError)
+    console.error('Failed to load reviews for vintage "%s":', vintage.id, reviewsError)
   }
 
   // Mirrors the wine_vintages DELETE policy (only whoever logged it) so the
