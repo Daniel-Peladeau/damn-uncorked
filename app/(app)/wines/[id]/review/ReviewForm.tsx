@@ -72,7 +72,7 @@ export function ReviewForm({
             <RatingFields defaults={existingReview} />
           </div>
 
-          <ReviewNotesFields defaults={existingReview} showOccasion />
+          <ReviewNotesFields defaults={existingReview} />
 
           <div className="flex gap-4 border-t border-border pt-6">
             <Link href={backHref} className="flex-1">

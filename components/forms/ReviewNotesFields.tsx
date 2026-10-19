@@ -12,15 +12,8 @@ type ReviewNotesDefaults = {
 
 // The free-text review fields and the "would buy again" checkbox, shared by
 // the Add Wine form and the review form. Field names match what
-// lib/reviews/validation.ts's parseReviewFields reads. Only the review form
-// shows Occasion today.
-export function ReviewNotesFields({
-  defaults,
-  showOccasion = false,
-}: {
-  defaults?: ReviewNotesDefaults | null
-  showOccasion?: boolean
-}) {
+// lib/reviews/validation.ts's parseReviewFields reads.
+export function ReviewNotesFields({ defaults }: { defaults?: ReviewNotesDefaults | null }) {
   return (
     <>
       <div className="space-y-2">
@@ -44,17 +37,15 @@ export function ReviewNotesFields({
         />
       </div>
 
-      {showOccasion && (
-        <div className="space-y-2">
-          <Label htmlFor="occasion">Occasion</Label>
-          <Input
-            id="occasion"
-            name="occasion"
-            placeholder="e.g., Anniversary dinner"
-            defaultValue={defaults?.occasion ?? ''}
-          />
-        </div>
-      )}
+      <div className="space-y-2">
+        <Label htmlFor="occasion">Occasion</Label>
+        <Input
+          id="occasion"
+          name="occasion"
+          placeholder="e.g., Anniversary dinner"
+          defaultValue={defaults?.occasion ?? ''}
+        />
+      </div>
 
       <div className="flex items-center gap-2">
         <Checkbox id="wouldBuyAgain" name="wouldBuyAgain" defaultChecked={defaults?.would_buy_again ?? false} />
