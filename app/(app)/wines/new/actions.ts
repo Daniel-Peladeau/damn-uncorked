@@ -12,6 +12,9 @@ import { geocodeToLocationPatch, parseSelectedLocation, toGeographyPoint } from 
 
 export type AddWineFormState = {
   error: string | null
+  // Set only for the "already reviewed this vintage" error, so the form can
+  // link straight to the existing review's edit page.
+  existingReviewHref?: string
 }
 
 // Shown to the user for any database failure — the real error (with table/
@@ -98,16 +101,21 @@ export async function createWineEntry(
   const vintageId = vintageResult.row.id
 
   // If this vintage already existed and this user already reviewed it, the
-  // insert below hits the "one row per user per wine_vintage" constraint and
-  // surfaces as the generic save-error message above. This form is for
-  // logging a wine for the first time, not editing an existing review of
-  // one — that's app/(app)/wines/[id]/review, reachable from the "Edit"
-  // button on the user's own review card on the wine detail page.
+  // insert below hits reviews_user_id_wine_vintage_id_key (the only unique
+  // constraint on reviews besides its generated id). This form is for
+  // logging a wine for the first time, so point the user at the existing
+  // review's edit page instead of a generic failure they can't retry past.
   const { error: reviewInsertError } = await supabase
     .from('reviews')
     .insert({ wine_vintage_id: vintageId, user_id: user.id, ...review })
 
   if (reviewInsertError) {
+    if (reviewInsertError.code === '23505') {
+      return {
+        error: "You've already reviewed this vintage.",
+        existingReviewHref: `/wines/${vintageId}/review`,
+      }
+    }
     console.error('Failed to save review:', reviewInsertError)
     return { error: GENERIC_SAVE_ERROR }
   }

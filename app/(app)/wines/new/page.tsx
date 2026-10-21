@@ -55,6 +55,14 @@ export default function AddWinePage() {
           {state.error && (
             <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {state.error}
+              {state.existingReviewHref && (
+                <>
+                  {' '}
+                  <Link href={state.existingReviewHref} className="font-medium underline underline-offset-4">
+                    Edit your review instead
+                  </Link>
+                </>
+              )}
             </div>
           )}
 
