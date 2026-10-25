@@ -26,6 +26,15 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 - [x] Upgrade `next` (currently 16.2.9) to the patched release — covers the bulk of the high/medium `next` alerts (Server Actions DoS/SSRF, Turbopack middleware bypass, rewrites SSRF, cache confusion, Image Optimization DoS, internal Server Function disclosure, unbounded Edge payload)
 - [x] Run a dependency audit/update pass for transitive packages and re-check remaining alerts: `brace-expansion`, `fast-uri`, `ip-address`, `js-yaml`, `nanoid`, `postcss`, `sharp`, `undici`, `hono` / `@hono/node-server`
 - [x] Re-run `gh api repos/Daniel-Peladeau/damn-uncorked/dependabot/alerts` (or check the Dependabot tab) after upgrades to confirm the count has dropped, and triage/dismiss any that don't apply to how this app actually uses the package
+- [ ] Full Snyk dependency review + allow Snyk to open fix/upgrade PRs (GitHub issue #92)
+
+---
+
+## Security — Database Hardening
+*From a 2026-10-24 review of the live Supabase policies and advisors. This repo is public, so specifics are kept out of tracked files.*
+
+- [ ] Tighten RLS policies on shared tables
+- [ ] Apply the Supabase security-advisor cleanup migration
 
 ---
 
@@ -66,7 +75,7 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 - [x] Wine search — filter by name, winery, region, grape, or type (GitHub issue #42)
 - [x] Sort wines — by rating, vintage, date added (GitHub issue #43)
 - [x] Delete review (with confirmation) (GitHub issue #44)
-- [ ] Delete wine (with confirmation) — deferred pending ownership model (GitHub issue #63)
+- [x] Delete wine (with confirmation) — limited to whoever logged it (GitHub issue #63)
 - [x] Edit a wine's details after creation (GitHub issue #66)
 - [x] Live winery location search when adding a wine, not just post-save geocoding (GitHub issue #68)
 
@@ -76,11 +85,18 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 - [ ] Research a more modern, inviting visual design direction — current UI is plain black/white/grayscale (GitHub issue #50)
 - [x] Build public landing page at `/` (GitHub issue #11)
 - [ ] Mobile testing pass — all pages, sidebar, forms (GitHub issue #45)
-- [ ] Empty states — what shows when no wines are logged yet (GitHub issue #46)
+- [x] Empty states — what shows when no wines are logged yet (GitHub issue #46)
 - [x] Loading states — skeletons while Supabase data fetches (GitHub issue #47)
 - [x] Error boundaries — graceful fallback if a page fetch fails (GitHub issue #48)
 - [ ] Final Vercel production deploy + smoke test (GitHub issue #49)
-- [ ] Account dropdown menu in sidebar — currently just a bare Sign out button (GitHub issue #67)
+- [x] Account dropdown menu in sidebar (GitHub issue #67)
+- [x] Dark mode toggle — light / dark / system (GitHub issue #74)
+- [x] Command palette / global search ⌘K (GitHub issue #75)
+- [x] Breadcrumbs in TopBar instead of a generic "Page" title (GitHub issue #76)
+- [x] Filter chips on wine list — type, would buy again, review status (GitHub issue #77)
+- [x] Mobile bottom navigation with one-tap Add Wine (GitHub issue #78)
+- [ ] Profile page with display names — `profiles` table + `/profile` (GitHub issue #79)
+- [ ] Move wine search/sort into Postgres + paginate the wine list (GitHub issue #80)
 
 ---
 
