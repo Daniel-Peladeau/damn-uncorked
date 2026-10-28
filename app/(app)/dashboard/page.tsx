@@ -8,14 +8,18 @@ import { Plus } from 'lucide-react'
 export default async function Dashboard() {
   const { wines } = await getWinesForUser()
 
+  // getWinesForUser also returns vintages only the partner has reviewed, so
+  // rank only the ones this user has rated — otherwise an unrated bottle can
+  // fill a "top" slot.
+  const ratedWines = wines.filter((w) => w.ratings.overall)
+
   // Get top 3 wines sorted by rating
-  const topWines = [...wines]
-    .sort((a, b) => (b.ratings.overall || 0) - (a.ratings.overall || 0))
+  const topWines = [...ratedWines]
+    .sort((a, b) => (b.ratings.overall ?? 0) - (a.ratings.overall ?? 0))
     .slice(0, 3)
 
   // A fresh sign-in (or one with no reviews yet) has no rated wines — guard
   // against dividing by zero instead of rendering "NaN/10".
-  const ratedWines = wines.filter((w) => w.ratings.overall)
   const averageRating = ratedWines.length
     ? (
         ratedWines.reduce((acc, w) => acc + (w.ratings.overall ?? 0), 0) /
@@ -46,7 +50,7 @@ export default async function Dashboard() {
         </h2>
         {topWines.length === 0 ? (
           <div className="rounded-lg border border-border bg-card p-12 text-center">
-            <h3 className="mb-4 text-xl font-semibold text-foreground">No wines logged yet</h3>
+            <h3 className="mb-4 text-xl font-semibold text-foreground">No rated wines yet</h3>
             <p className="mb-6 text-muted-foreground">
               Log your first bottle to start seeing it here.
             </p>

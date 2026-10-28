@@ -9,9 +9,7 @@ export const WINE_SELECT = `
   wines (
     name,
     wine_type,
-    region,
-    country,
-    winery:wineries ( name ),
+    winery:wineries ( name, region, country ),
     wine_grapes ( grapes ( name ) )
   ),
   reviews!left (
@@ -34,9 +32,9 @@ export type WineVintageRow = {
   wines: {
     name: string
     wine_type: Wine['type']
-    region: string | null
-    country: string | null
-    winery: { name: string } | null
+    // Region/country live on the winery. `wines` has legacy columns of the
+    // same name that nothing writes, so don't select those.
+    winery: { name: string; region: string | null; country: string | null } | null
     wine_grapes: { grapes: { name: string } }[]
   }
   // `reviews!left` + `.eq('reviews.user_id', ...)` scopes this to at most the
@@ -68,8 +66,8 @@ export function mapRowToWine(row: WineVintageRow, userId: string): Wine {
     name: row.wines.name,
     winery: row.wines.winery?.name ?? '',
     vintage: row.vintage_year ?? 0,
-    region: row.wines.region ?? '',
-    country: row.wines.country ?? '',
+    region: row.wines.winery?.region ?? '',
+    country: row.wines.winery?.country ?? '',
     grapes: row.wines.wine_grapes.map((wineGrape) => wineGrape.grapes.name),
     type: row.wines.wine_type,
     ratings: {
