@@ -25,9 +25,11 @@ export function WineCard({ wine, isClickable = true }: WineCardProps) {
       </div>
 
       <div className="mb-4">
-        <p className="text-xs text-muted-foreground">
-          {wine.region}, {wine.country}
-        </p>
+        {(wine.region || wine.country) && (
+          <p className="text-xs text-muted-foreground">
+            {[wine.region, wine.country].filter(Boolean).join(', ')}
+          </p>
+        )}
         <div className="mt-2 flex flex-wrap gap-1">
           {wine.grapes.map((grape) => (
             <span
