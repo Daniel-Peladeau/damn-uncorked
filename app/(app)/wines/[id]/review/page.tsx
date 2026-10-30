@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCurrentUser } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { ReviewForm } from './ReviewForm'
 import { WineBreadcrumbLabel } from '@/components/layout/BreadcrumbLabels'
@@ -11,9 +11,7 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
   const { id } = await params
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   // proxy.ts already gates this route to signed-in users; this is defense
   // in depth (and keeps `user.id` below non-nullable without a cast).

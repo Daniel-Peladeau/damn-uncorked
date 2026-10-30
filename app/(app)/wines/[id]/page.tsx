@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/PageHeader'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCurrentUser } from '@/lib/supabase/server'
 import { ArrowLeft } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { DeleteWineButton } from './DeleteControls'
@@ -17,9 +17,7 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
   const { id } = await params
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   // wine_vintages is the row this route's `id` addresses (one wine can have
   // several vintages, each with its own reviews) — embed the parent `wines`

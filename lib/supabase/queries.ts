@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCurrentUser } from '@/lib/supabase/server'
 import { WINE_TYPES, type Wine, type WineType } from '@/lib/types/wine'
 import type { SortOption } from '@/lib/types/sort'
 import { hasActiveFilters, type WineFilters } from '@/lib/types/filters'
@@ -22,9 +22,7 @@ export async function getWinesForUser(
   filters?: WineFilters
 ): Promise<WineList> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) return EMPTY_WINE_LIST
 
   const baseQuery = supabase.from('wine_vintages').select(WINE_SELECT).eq('reviews.user_id', user.id)
@@ -84,9 +82,7 @@ export async function getWinesForUser(
 
 export async function getWineById(vintageId: string): Promise<Wine | null> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) return null
 
   const { data, error } = await supabase
