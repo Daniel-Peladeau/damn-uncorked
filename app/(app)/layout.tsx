@@ -1,11 +1,8 @@
 import { AppLayout } from '@/components/layout/AppLayout'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/supabase/server'
 
 export default async function AppGroupLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   return <AppLayout userEmail={user?.email ?? null}>{children}</AppLayout>
 }

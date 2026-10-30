@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCurrentUser } from '@/lib/supabase/server'
 import type { WineType } from '@/lib/types/wine'
 
 export type WineIndexEntry = {
@@ -23,9 +23,7 @@ type WineIndexRow = {
 // reviews or grapes, so it stays cheap to fetch every time the palette opens.
 export async function getWineIndex(): Promise<WineIndexEntry[]> {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
   if (!user) return []
 
   const { data, error } = await supabase
