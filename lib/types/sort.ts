@@ -2,7 +2,7 @@
 // Supabase client via next/headers) so client components can import these
 // constants without pulling a server-only module into the browser bundle.
 
-export const SORT_OPTIONS = ['recent', 'rating', 'vintage'] as const
+export const SORT_OPTIONS = ['recent', 'rating', 'rating-low', 'vintage', 'vintage-old'] as const
 export type SortOption = (typeof SORT_OPTIONS)[number]
 
 export function isSortOption(value: string | undefined): value is SortOption {
