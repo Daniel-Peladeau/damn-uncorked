@@ -7,7 +7,9 @@ import { SORT_OPTIONS, type SortOption } from '@/lib/types/sort'
 const SORT_LABELS: Record<SortOption, string> = {
   recent: 'Recently Added',
   rating: 'Highest Rated',
+  'rating-low': 'Lowest Rated',
   vintage: 'Vintage (Newest)',
+  'vintage-old': 'Vintage (Oldest)',
 }
 
 export function SortControl({ currentSort }: { currentSort: SortOption }) {

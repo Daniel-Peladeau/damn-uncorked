@@ -37,8 +37,8 @@ export async function getWinesForUser(
   // Sorted in JS below instead, after each row is mapped down to that one
   // (or zero) review.
   const query =
-    sortBy === 'vintage'
-      ? baseQuery.order('vintage_year', { ascending: false, nullsFirst: false })
+    sortBy === 'vintage' || sortBy === 'vintage-old'
+      ? baseQuery.order('vintage_year', { ascending: sortBy === 'vintage-old', nullsFirst: false })
       : baseQuery.order('created_at', { ascending: false })
 
   const { data, error } = await query.returns<WineVintageRow[]>()
@@ -69,6 +69,10 @@ export async function getWinesForUser(
     // last, matching the nullsFirst: false behavior used for the
     // database-level sorts above.
     wines.sort((a, b) => (b.ratings.overall ?? -Infinity) - (a.ratings.overall ?? -Infinity))
+  } else if (sortBy === 'rating-low') {
+    // Unrated wines still sort last here, not first — "lowest rated" means
+    // the lowest scores, not wines with no score at all.
+    wines.sort((a, b) => (a.ratings.overall ?? Infinity) - (b.ratings.overall ?? Infinity))
   }
 
   const typesInLog = new Set(allWines.map((wine) => wine.type))
