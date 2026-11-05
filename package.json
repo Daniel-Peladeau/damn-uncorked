@@ -42,6 +42,12 @@
   },
   "overrides": {
     "postcss": "^8.5.26",
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.4"
+    },
+    "@ts-morph/common": {
+      "minimatch": "^11.0.4"
+    }
   }
 }
