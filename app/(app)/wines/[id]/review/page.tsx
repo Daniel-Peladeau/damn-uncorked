@@ -2,6 +2,7 @@ import { createClient, getCurrentUser } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { ReviewForm } from './ReviewForm'
 import { WineBreadcrumbLabel } from '@/components/layout/BreadcrumbLabels'
+import { logError } from '@/lib/log'
 
 interface ReviewPageProps {
   params: Promise<{ id: string }>
@@ -26,7 +27,7 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
     .maybeSingle()
 
   if (vintageError) {
-    console.error('Failed to load wine vintage "%s" for review form:', id, vintageError)
+    logError('Failed to load wine vintage for review form', vintageError, { vintageId: id })
     throw new Error('Failed to load wine details.')
   }
 
@@ -42,7 +43,7 @@ export default async function ReviewPage({ params }: ReviewPageProps) {
     .maybeSingle()
 
   if (reviewError) {
-    console.error('Failed to load existing review for vintage "%s":', id, reviewError)
+    logError('Failed to load existing review for vintage', reviewError, { vintageId: id })
     throw new Error('Failed to load your review.')
   }
 

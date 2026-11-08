@@ -8,6 +8,7 @@ import { DeleteWineButton } from './DeleteControls'
 import { WineBreadcrumbLabel } from '@/components/layout/BreadcrumbLabels'
 import { WineDetailsCard } from './WineDetailsCard'
 import { ReviewsSection } from './ReviewsSection'
+import { logError } from '@/lib/log'
 
 interface WineDetailPageProps {
   params: Promise<{ id: string }>
@@ -48,7 +49,7 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
   // filters absent ones, by design), so that case still falls through to
   // notFound() below, but an actual error shouldn't silently render as a 404.
   if (vintageError) {
-    console.error('Failed to load wine vintage "%s":', id, vintageError)
+    logError('Failed to load wine vintage', vintageError, { vintageId: id })
     throw new Error('Failed to load wine details.')
   }
 
@@ -72,7 +73,7 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
     .order('created_at', { ascending: true })
 
   if (reviewsError) {
-    console.error('Failed to load reviews for vintage "%s":', vintage.id, reviewsError)
+    logError('Failed to load reviews for vintage', reviewsError, { vintageId: vintage.id })
   }
 
   // Mirrors the wine_vintages DELETE policy (only whoever logged it) so the

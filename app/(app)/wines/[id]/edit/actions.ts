@@ -7,6 +7,7 @@ import { parseWineFields } from '@/lib/wines/form'
 import { resolveWinery } from '@/lib/wines/winery'
 import { reconcileWineGrapes } from '@/lib/wines/wine-grapes'
 import { geocodeToLocationPatch } from '@/lib/geocoding'
+import { logError } from '@/lib/log'
 
 export type EditWineFormState = {
   error: string | null
@@ -52,7 +53,7 @@ export async function updateWineEntry(
     .maybeSingle()
 
   if (vintageLookupError) {
-    console.error('Failed to look up vintage for edit:', vintageId, vintageLookupError)
+    logError('Failed to look up vintage for edit', vintageLookupError, { vintageId })
     return { error: GENERIC_SAVE_ERROR }
   }
 
@@ -85,7 +86,7 @@ export async function updateWineEntry(
       if (wineUpdateError.code === '23505') {
         return { error: 'A wine with this name already exists for this winery and type.' }
       }
-      console.error('Failed to update wine "%s":', wine.id, wineUpdateError)
+      logError('Failed to update wine', wineUpdateError, { wineId: wine.id })
       return { error: GENERIC_SAVE_ERROR }
     }
   }
@@ -100,7 +101,7 @@ export async function updateWineEntry(
       if (vintageUpdateError.code === '23505') {
         return { error: 'This wine already has a logged vintage for that year.' }
       }
-      console.error('Failed to update vintage year:', vintageId, vintageUpdateError)
+      logError('Failed to update vintage year', vintageUpdateError, { vintageId })
       return { error: GENERIC_SAVE_ERROR }
     }
   }

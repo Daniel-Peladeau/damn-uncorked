@@ -1,5 +1,6 @@
 import type { ServerSupabaseClient } from '@/lib/supabase/server'
 import { escapeIlikePattern, findOrCreateByName } from '@/lib/wines/find-or-create'
+import { logError } from '@/lib/log'
 
 // Finds or creates the grape by name, then links it to the wine unless that
 // pairing already exists (e.g. from a prior vintage's submission) — skipping
@@ -8,7 +9,6 @@ import { escapeIlikePattern, findOrCreateByName } from '@/lib/wines/find-or-crea
 async function linkGrapeToWine(supabase: ServerSupabaseClient, wineId: string, grapeName: string): Promise<boolean> {
   const grapeResult = await findOrCreateByName<{ id: string }>(
     'grape',
-    grapeName,
     () => supabase.from('grapes').select('id').ilike('name', escapeIlikePattern(grapeName)).limit(1).maybeSingle(),
     // The form doesn't collect a color for newly-typed-in grapes yet, so
     // they're saved as 'other' until someone sets it.
@@ -27,7 +27,7 @@ async function linkGrapeToWine(supabase: ServerSupabaseClient, wineId: string, g
     .maybeSingle()
 
   if (lookupError) {
-    console.error('Failed to look up existing grape link for "%s":', grapeName, lookupError)
+    logError('Failed to look up existing grape link', lookupError, { wineId, grapeId })
     return false
   }
 
@@ -38,7 +38,7 @@ async function linkGrapeToWine(supabase: ServerSupabaseClient, wineId: string, g
   const { error: linkError } = await supabase.from('wine_grapes').insert({ wine_id: wineId, grape_id: grapeId })
 
   if (linkError) {
-    console.error('Failed to link grape "%s" to wine "%s":', grapeName, wineId, linkError)
+    logError('Failed to link grape to wine', linkError, { wineId, grapeId })
     return false
   }
 
@@ -71,7 +71,7 @@ export async function reconcileWineGrapes(
     .eq('wine_id', wineId)
 
   if (currentLinksError) {
-    console.error('Failed to look up current grapes for wine "%s":', wineId, currentLinksError)
+    logError('Failed to look up current grapes for wine', currentLinksError, { wineId })
     return false
   }
 
@@ -94,7 +94,7 @@ export async function reconcileWineGrapes(
           .in('grape_id', grapeIdsToRemove)
           .then(({ error }) => {
             if (error) {
-              console.error('Failed to unlink removed grapes from wine "%s":', wineId, error)
+              logError('Failed to unlink removed grapes from wine', error, { wineId })
               return false
             }
             return true

@@ -3,6 +3,8 @@
 // winery name (not coordinates, which they wouldn't know); this fills in the
 // map pin location in the background. A failed or empty lookup just means
 // the winery won't have a pin yet — it never blocks saving the wine.
+import { logError } from '@/lib/log'
+
 const NOMINATIM_SEARCH_URL = 'https://nominatim.openstreetmap.org/search'
 
 export type GeocodeResult = { lat: number; lng: number }
@@ -29,13 +31,13 @@ async function fetchNominatimSearch(query: string, limit: number): Promise<Respo
     })
 
     if (!response.ok) {
-      console.error(`Nominatim search failed for "${query}": ${response.status}`)
+      logError('Nominatim search failed', undefined, { status: response.status })
       return null
     }
 
     return response
   } catch (error) {
-    console.error('Nominatim search request failed for query:', query, error)
+    logError('Nominatim search request failed', error)
     return null
   }
 }
@@ -55,7 +57,7 @@ async function searchNominatim(query: string): Promise<GeocodeResult | null> {
 
     return { lat, lng }
   } catch (error) {
-    console.error('Failed to parse Nominatim response for query:', query, error)
+    logError('Failed to parse Nominatim response', error)
     return null
   }
 }
@@ -120,7 +122,7 @@ export async function searchNominatimCandidates(query: string, limit = 5): Promi
       }))
       .filter((candidate) => Number.isFinite(candidate.lat) && Number.isFinite(candidate.lng))
   } catch (error) {
-    console.error('Failed to parse Nominatim response for query:', query, error)
+    logError('Failed to parse Nominatim response', error)
     return []
   }
 }

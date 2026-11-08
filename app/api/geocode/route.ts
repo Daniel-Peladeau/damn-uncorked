@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   }
 
   // No real winery/place search needs more than this — rejects oversized
-  // input before it's forwarded to Nominatim or written to the server logs.
+  // input before it's forwarded to Nominatim.
   if (query.length > MAX_QUERY_LENGTH) {
     return NextResponse.json({ error: 'Query too long' }, { status: 400 })
   }

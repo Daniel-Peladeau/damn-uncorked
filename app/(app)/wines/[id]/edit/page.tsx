@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { EditWineForm } from './EditWineForm'
 import { WineBreadcrumbLabel } from '@/components/layout/BreadcrumbLabels'
+import { logError } from '@/lib/log'
 
 interface EditWinePageProps {
   params: Promise<{ id: string }>
@@ -33,7 +34,7 @@ export default async function EditWinePage({ params }: EditWinePageProps) {
     .maybeSingle()
 
   if (vintageError) {
-    console.error('Failed to load wine vintage "%s" for edit form:', id, vintageError)
+    logError('Failed to load wine vintage for edit form', vintageError, { vintageId: id })
     throw new Error('Failed to load wine details.')
   }
 

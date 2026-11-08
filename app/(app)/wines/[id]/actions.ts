@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { logError } from '@/lib/log'
 
 export type DeleteActionState = {
   error: string | null
@@ -49,12 +50,12 @@ export async function deleteReview(
     .select('id')
 
   if (error) {
-    console.error('Failed to delete review:', reviewId, error)
+    logError('Failed to delete review', error, { reviewId })
     return { error: GENERIC_DELETE_ERROR }
   }
 
   if (!deleted || deleted.length === 0) {
-    console.error(`Delete review "${reviewId}" matched no rows (already deleted, or not owned by "${user.id}").`)
+    logError('Delete review matched no rows (already deleted, or not owned by the caller)', undefined, { reviewId })
     return { error: GENERIC_DELETE_ERROR }
   }
 
@@ -113,12 +114,12 @@ export async function deleteWine(
     .select('id')
 
   if (error) {
-    console.error('Failed to delete wine vintage "%s":', vintageId, error)
+    logError('Failed to delete wine vintage', error, { vintageId })
     return { error: GENERIC_DELETE_ERROR }
   }
 
   if (!deleted || deleted.length === 0) {
-    console.error(`Delete wine vintage "${vintageId}" matched no rows (already deleted, or not logged by "${user.id}").`)
+    logError('Delete wine vintage matched no rows (already deleted, or not logged by the caller)', undefined, { vintageId })
     return { error: "This wine couldn't be deleted. It may already be gone, or it was logged by someone else." }
   }
 

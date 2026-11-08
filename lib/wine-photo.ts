@@ -7,6 +7,8 @@
 // saving the wine. The image URL is hotlinked directly (not re-hosted) —
 // simplest option for now, revisit if hotlink reliability ever becomes a
 // real problem in practice.
+import { logError } from '@/lib/log'
+
 const OFF_SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl'
 
 async function searchOpenFoodFacts(query: string): Promise<string | null> {
@@ -24,7 +26,7 @@ async function searchOpenFoodFacts(query: string): Promise<string | null> {
     })
 
     if (!response.ok) {
-      console.error(`Open Food Facts search failed for "${query}": ${response.status}`)
+      logError('Open Food Facts search failed', undefined, { status: response.status })
       return null
     }
 
@@ -36,7 +38,7 @@ async function searchOpenFoodFacts(query: string): Promise<string | null> {
 
     return first.image_front_url ?? first.image_url ?? null
   } catch (error) {
-    console.error('Failed to fetch wine photo for "%s":', query, error)
+    logError('Failed to fetch wine photo', error)
     return null
   }
 }

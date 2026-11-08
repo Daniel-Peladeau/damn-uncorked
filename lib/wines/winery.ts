@@ -1,5 +1,6 @@
 import type { ServerSupabaseClient } from '@/lib/supabase/server'
 import { escapeIlikePattern, findOrCreateByName } from '@/lib/wines/find-or-create'
+import { logError } from '@/lib/log'
 
 type LocationPatch = { location: string | null }
 
@@ -33,7 +34,6 @@ export async function resolveWinery(
     country: string | null
   }>(
     'winery',
-    name,
     () =>
       supabase
         .from('wineries')
@@ -66,7 +66,7 @@ export async function resolveWinery(
         .eq('id', wineryId)
 
       if (error) {
-        console.error('Failed to update winery "%s" details:', name, error)
+        logError('Failed to update winery details', error, { wineryId })
         return null
       }
     }
