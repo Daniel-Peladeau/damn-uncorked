@@ -1,6 +1,7 @@
 import type { ServerSupabaseClient } from '@/lib/supabase/server'
 import type { WineType } from '@/lib/types/wine'
 import { escapeIlikePattern, findOrCreateByName } from '@/lib/wines/find-or-create'
+import { logError } from '@/lib/log'
 
 // Add Wine's find-or-create for the `wines` row: same winery + name = same
 // wine across vintages. If the wine already existed with a different type,
@@ -13,7 +14,6 @@ export async function resolveWine(
 ): Promise<string | null> {
   const wineResult = await findOrCreateByName<{ id: string; wine_type: WineType }>(
     'wine',
-    name,
     () =>
       supabase
         .from('wines')
@@ -33,7 +33,7 @@ export async function resolveWine(
     const { error } = await supabase.from('wines').update({ wine_type: type }).eq('id', wineId)
 
     if (error) {
-      console.error('Failed to update wine "%s" type:', name, error)
+      logError('Failed to update wine type', error, { wineId })
       return null
     }
   }

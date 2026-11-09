@@ -10,7 +10,6 @@ export function findOrCreateVintage(
 ): Promise<FindOrCreateResult<{ id: string }>> {
   return findOrCreateByName<{ id: string }>(
     'vintage',
-    String(vintageYear),
     () =>
       supabase
         .from('wine_vintages')

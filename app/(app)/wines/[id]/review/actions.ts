@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { INVALID_RATINGS_ERROR, parseReviewFields } from '@/lib/reviews/validation'
+import { logError } from '@/lib/log'
 
 export type ReviewFormState = {
   error: string | null
@@ -46,7 +47,7 @@ export async function saveReview(
     .maybeSingle()
 
   if (vintageError) {
-    console.error('Failed to look up vintage for review save:', vintageId, vintageError)
+    logError('Failed to look up vintage for review save', vintageError, { vintageId })
     return { error: GENERIC_SAVE_ERROR }
   }
 
@@ -66,7 +67,7 @@ export async function saveReview(
   )
 
   if (upsertError) {
-    console.error('Failed to save review for vintage:', vintageId, upsertError)
+    logError('Failed to save review for vintage', upsertError, { vintageId })
     return { error: GENERIC_SAVE_ERROR }
   }
 

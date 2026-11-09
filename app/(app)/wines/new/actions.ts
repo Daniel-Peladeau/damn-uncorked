@@ -9,6 +9,7 @@ import { resolveWine } from '@/lib/wines/wine'
 import { findOrCreateVintage } from '@/lib/wines/vintage'
 import { linkGrapesToWine } from '@/lib/wines/wine-grapes'
 import { geocodeToLocationPatch, parseSelectedLocation, toGeographyPoint } from '@/lib/geocoding'
+import { logError } from '@/lib/log'
 
 export type AddWineFormState = {
   error: string | null
@@ -116,7 +117,7 @@ export async function createWineEntry(
         existingReviewHref: `/wines/${vintageId}/review`,
       }
     }
-    console.error('Failed to save review:', reviewInsertError)
+    logError('Failed to save review', reviewInsertError, { vintageId })
     return { error: GENERIC_SAVE_ERROR }
   }
 

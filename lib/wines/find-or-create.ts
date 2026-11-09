@@ -2,6 +2,7 @@
 // name, else create it" for wineries/wines/grapes, plus the ILIKE-pattern
 // escaping every one of those lookups needs.
 import type { PostgrestError } from '@supabase/supabase-js'
+import { logError } from '@/lib/log'
 
 // ilike() treats "%" and "_" as wildcards, and "\" as its escape character —
 // escape backslashes first (so we don't double-escape the escapes we add),
@@ -48,14 +49,13 @@ export type LookupResult<Row> = { data: Row | null; error: PostgrestError | null
 // that name.
 export async function findOrCreateByName<Row extends { id: string }>(
   entityLabel: string,
-  name: string,
   lookup: () => PromiseLike<LookupResult<Row>>,
   create: () => PromiseLike<LookupResult<Row>>
 ): Promise<FindOrCreateResult<Row>> {
   const { data: existing, error: lookupError } = await lookup()
 
   if (lookupError) {
-    console.error('Failed to look up %s "%s":', entityLabel, name, lookupError)
+    logError(`Failed to look up ${entityLabel}`, lookupError)
     return { ok: false }
   }
 
@@ -66,7 +66,7 @@ export async function findOrCreateByName<Row extends { id: string }>(
   const { data: created, error: insertError } = await create()
 
   if (insertError || !created) {
-    console.error('Failed to create %s "%s":', entityLabel, name, insertError)
+    logError(`Failed to create ${entityLabel}`, insertError)
     return { ok: false }
   }
 
