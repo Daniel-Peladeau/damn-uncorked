@@ -83,22 +83,3 @@ export async function getWinesForUser(
     loggedTypes: WINE_TYPES.filter((type) => typesInLog.has(type)),
   }
 }
-
-export async function getWineById(vintageId: string): Promise<Wine | null> {
-  const supabase = await createClient()
-  const user = await getCurrentUser()
-  if (!user) return null
-
-  const { data, error } = await supabase
-    .from('wine_vintages')
-    .select(WINE_SELECT)
-    .eq('id', vintageId)
-    .eq('reviews.user_id', user.id)
-    .maybeSingle()
-    .returns<WineVintageRow>()
-
-  if (error) throw error
-  if (!data) return null
-
-  return mapRowToWine(data, user.id)
-}
