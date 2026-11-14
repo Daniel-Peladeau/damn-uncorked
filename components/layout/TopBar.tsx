@@ -30,6 +30,7 @@ const SEGMENT_TITLES: Record<string, string> = {
   wines: 'Wines',
   map: 'Winery Map',
   about: 'About',
+  profile: 'Profile',
   new: 'Add Wine',
   review: 'Review',
   edit: 'Edit',

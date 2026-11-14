@@ -11,9 +11,10 @@ import { CommandPalette } from '@/components/CommandPalette'
 interface AppLayoutProps {
   children: React.ReactNode
   userEmail: string | null
+  displayName: string | null
 }
 
-export function AppLayout({ children, userEmail }: AppLayoutProps) {
+export function AppLayout({ children, userEmail, displayName }: AppLayoutProps) {
   const pathname = usePathname()
   const [paletteOpen, setPaletteOpen] = useState(false)
 
@@ -22,7 +23,7 @@ export function AppLayout({ children, userEmail }: AppLayoutProps) {
       {/* viewport-fit=cover (app/layout.tsx) lets the page run under a landscape notch */}
       <div className="flex h-dvh bg-background pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         {/* Sidebar */}
-        <Sidebar currentPath={pathname} userEmail={userEmail} />
+        <Sidebar currentPath={pathname} userEmail={userEmail} displayName={displayName} />
 
         {/* Main content area */}
         <div className="flex flex-1 flex-col overflow-hidden">
@@ -37,7 +38,7 @@ export function AppLayout({ children, userEmail }: AppLayoutProps) {
           </main>
         </div>
 
-        <BottomNav currentPath={pathname} userEmail={userEmail} />
+        <BottomNav currentPath={pathname} userEmail={userEmail} displayName={displayName} />
         <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       </div>
     </BreadcrumbLabelsProvider>
