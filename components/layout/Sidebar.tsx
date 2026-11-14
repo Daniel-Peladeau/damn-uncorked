@@ -10,12 +10,13 @@ import { aboutNavItem, isNavActive, primaryNavItems } from './nav-items'
 interface SidebarProps {
   currentPath: string
   userEmail: string | null
+  displayName: string | null
 }
 
 const navItems = [...primaryNavItems, aboutNavItem]
 
 // Desktop only — on mobile, BottomNav covers every destination.
-export function Sidebar({ currentPath, userEmail }: SidebarProps) {
+export function Sidebar({ currentPath, userEmail, displayName }: SidebarProps) {
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card md:flex">
       {/* Logo/Brand */}
@@ -47,9 +48,9 @@ export function Sidebar({ currentPath, userEmail }: SidebarProps) {
               variant="ghost"
               className="w-full justify-start gap-2 px-2"
             >
-              <AccountInitial userEmail={userEmail} />
+              <AccountInitial name={displayName} />
               <span className="flex-1 truncate text-left text-sm">
-                {userEmail ?? 'Account'}
+                {displayName ?? 'Account'}
               </span>
               <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
             </Button>

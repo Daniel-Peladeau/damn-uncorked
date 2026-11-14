@@ -7,10 +7,12 @@ import type { Review } from './rating'
 export function ReviewsSection({
   reviews,
   userId,
+  reviewerNames,
   vintageId,
 }: {
   reviews: Review[]
   userId: string | null
+  reviewerNames: Map<string, string>
   vintageId: string
 }) {
   // The signed-in user's own review (if present) always renders first —
@@ -41,6 +43,7 @@ export function ReviewsSection({
             key={review.id}
             review={review}
             isOwnReview={review.user_id === userId}
+            reviewerName={reviewerNames.get(review.user_id) ?? null}
             vintageId={vintageId}
             className={isLoneCard ? 'md:col-span-2' : undefined}
           />

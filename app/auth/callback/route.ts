@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { ensureProfile } from '@/lib/supabase/profiles'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
     if (!error && user?.email) {
       const { data: allowed, error: allowlistError } = await supabase
         .from('allowed_users')
-        .select('email')
+        .select('email, name')
         .eq('email', user.email)
         .single()
 
@@ -30,6 +31,10 @@ export async function GET(request: Request) {
         await supabase.auth.signOut()
         return NextResponse.redirect(`${origin}/auth/signin?error=not_allowed`)
       }
+
+      // Only after the allowlist check, so a rejected sign-up never gets a
+      // profile row.
+      await ensureProfile(supabase, user, allowed.name)
 
       return NextResponse.redirect(`${origin}/dashboard`)
     }

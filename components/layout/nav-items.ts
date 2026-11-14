@@ -1,4 +1,4 @@
-import { LayoutDashboard, Wine, Map, Info, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, Wine, Map, Info, User, type LucideIcon } from 'lucide-react'
 
 export interface NavItem {
   href: string
@@ -14,6 +14,8 @@ export const primaryNavItems: NavItem[] = [
 ]
 
 export const aboutNavItem: NavItem = { href: '/about', label: 'About', icon: Info }
+
+export const profileNavItem: NavItem = { href: '/profile', label: 'Profile', icon: User }
 
 export const addWineHref = '/wines/new'
 
