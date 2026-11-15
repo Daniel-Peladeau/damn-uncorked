@@ -13,7 +13,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command'
-import { aboutNavItem, addWineHref, primaryNavItems } from '@/components/layout/nav-items'
+import { aboutNavItem, addWineHref, primaryNavItems, profileNavItem } from '@/components/layout/nav-items'
 import { useSignOut } from '@/components/layout/use-sign-out'
 import { loadWineIndex } from '@/app/(app)/actions'
 import type { WineIndexEntry } from '@/lib/supabase/wine-index'
@@ -25,7 +25,7 @@ interface CommandPaletteProps {
   onOpenChange: Dispatch<SetStateAction<boolean>>
 }
 
-const pages = [...primaryNavItems, aboutNavItem]
+const pages = [...primaryNavItems, aboutNavItem, profileNavItem]
 
 function normalize(value: string) {
   return foldDiacritics(value.toLowerCase())

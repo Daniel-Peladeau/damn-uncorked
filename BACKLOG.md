@@ -95,7 +95,7 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 - [x] Breadcrumbs in TopBar instead of a generic "Page" title (GitHub issue #76)
 - [x] Filter chips on wine list — type, would buy again, review status (GitHub issue #77)
 - [x] Mobile bottom navigation with one-tap Add Wine (GitHub issue #78)
-- [ ] Profile page with display names — `profiles` table + `/profile` (GitHub issue #79)
+- [x] Profile page with display names — `profiles` table + `/profile` (GitHub issue #79)
 - [ ] Move wine search/sort into Postgres + paginate the wine list (GitHub issue #80)
 
 ---

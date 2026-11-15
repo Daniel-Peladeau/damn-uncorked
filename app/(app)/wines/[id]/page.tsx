@@ -9,6 +9,7 @@ import { WineBreadcrumbLabel } from '@/components/layout/BreadcrumbLabels'
 import { WineDetailsCard } from './WineDetailsCard'
 import { ReviewsSection } from './ReviewsSection'
 import { logError } from '@/lib/log'
+import { getDisplayNamesByIds } from '@/lib/supabase/profiles'
 
 interface WineDetailPageProps {
   params: Promise<{ id: string }>
@@ -76,6 +77,11 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
     logError('Failed to load reviews for vintage', reviewsError, { vintageId: vintage.id })
   }
 
+  // Only the other reviewer's card needs a name ("Your Review" covers ours).
+  // Same page load; a failed lookup just falls back to "Their Review".
+  const otherReviewerIds = (reviews ?? []).map((r) => r.user_id).filter((id) => id !== user?.id)
+  const reviewerNames = await getDisplayNamesByIds(supabase, otherReviewerIds)
+
   // Mirrors the wine_vintages DELETE policy (only whoever logged it) so the
   // button isn't offered to someone RLS would refuse anyway.
   const canDeleteWine = user !== null && vintage.created_by === user.id
@@ -115,7 +121,12 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
             <p className="text-muted-foreground">Couldn&apos;t load reviews right now. Please try again.</p>
           </div>
         ) : (
-          <ReviewsSection reviews={reviews ?? []} userId={user?.id ?? null} vintageId={vintage.id} />
+          <ReviewsSection
+            reviews={reviews ?? []}
+            userId={user?.id ?? null}
+            reviewerNames={reviewerNames}
+            vintageId={vintage.id}
+          />
         )}
       </div>
     </div>

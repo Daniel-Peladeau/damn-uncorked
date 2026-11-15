@@ -5,11 +5,12 @@ import { Plus } from 'lucide-react'
 import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { AccountInitial, AccountMenuContent } from './AccountMenuContent'
-import { aboutNavItem, addWineHref, isNavActive, primaryNavItems, type NavItem } from './nav-items'
+import { aboutNavItem, addWineHref, isNavActive, primaryNavItems, profileNavItem, type NavItem } from './nav-items'
 
 interface BottomNavProps {
   currentPath: string
   userEmail: string | null
+  displayName: string | null
 }
 
 // Every icon sits in the same fixed-height slot so labels share a baseline
@@ -36,7 +37,7 @@ function NavTab({ item, active }: { item: NavItem; active: boolean }) {
 }
 
 // Mobile only (below md). Fixed to the bottom so logging a bottle is one thumb tap away.
-export function BottomNav({ currentPath, userEmail }: BottomNavProps) {
+export function BottomNav({ currentPath, userEmail, displayName }: BottomNavProps) {
   const [dashboard, wines, map] = primaryNavItems
   const addActive = isNavActive(currentPath, addWineHref)
   const AboutIcon = aboutNavItem.icon
@@ -68,11 +69,13 @@ export function BottomNav({ currentPath, userEmail }: BottomNavProps) {
           <DropdownMenuTrigger
             className={cn(
               tabClass,
-              isNavActive(currentPath, aboutNavItem.href) ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+              isNavActive(currentPath, aboutNavItem.href) || isNavActive(currentPath, profileNavItem.href)
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <span className={iconSlotClass}>
-              <AccountInitial userEmail={userEmail} />
+              <AccountInitial name={displayName} />
             </span>
             Account
           </DropdownMenuTrigger>

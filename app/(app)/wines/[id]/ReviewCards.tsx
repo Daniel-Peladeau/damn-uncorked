@@ -20,18 +20,23 @@ export function PromptReviewCard({ vintageId, className }: { vintageId: string; 
 export function ReviewCard({
   review,
   isOwnReview,
+  reviewerName,
   vintageId,
   className,
 }: {
   review: Review
   isOwnReview: boolean
+  // The other reviewer's profile display name; null falls back to "Their".
+  reviewerName: string | null
   vintageId: string
   className?: string
 }) {
+  const title = isOwnReview ? 'Your Review' : reviewerName ? `${reviewerName}'s Review` : 'Their Review'
+
   return (
     <div className={`rounded-lg border border-border bg-card p-6 ${className ?? ''}`}>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">{isOwnReview ? 'Your Review' : 'Their Review'}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
         {isOwnReview && (
           <div className="flex items-center gap-1">
             <Link href={`/wines/${vintageId}/review`}>
