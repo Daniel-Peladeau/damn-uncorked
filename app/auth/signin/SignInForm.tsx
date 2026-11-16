@@ -36,13 +36,23 @@ export default function SignInForm() {
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        // Magic links are for existing accounts only, so this form never
+        // asks Supabase to create a user for an unknown email.
+        shouldCreateUser: false,
+      },
     })
     setLoading(false)
-    if (error) {
-      setFormError(error.message)
-    } else {
+    // An unknown email comes back as a "signups not allowed" error. Show the
+    // same "check your email" screen as a real send so the form doesn't
+    // reveal which addresses have accounts.
+    if (!error || error.code === 'otp_disabled' || error.code === 'signup_disabled') {
       setMagicLinkSent(true)
+    } else if (error.code === 'over_email_send_rate_limit' || error.code === 'over_request_rate_limit') {
+      setFormError('Too many sign-in attempts. Please wait a minute and try again.')
+    } else {
+      setFormError('Could not send the sign-in link. Please try again.')
     }
   }
 
