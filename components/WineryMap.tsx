@@ -32,7 +32,7 @@ export function WineryMap({ wineries }: { wineries: WineryPin[] }) {
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {wineries.map((winery) => (
         <Marker key={winery.id} position={[winery.lat, winery.lng]} icon={markerIcon}>
