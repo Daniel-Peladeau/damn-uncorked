@@ -36,7 +36,7 @@
 | Layer | Technology |
 |---|---|
 | Framework | Next.js 16 (App Router) + React 19 + TypeScript (strict) |
-| Styling | Tailwind CSS 4 + shadcn/ui (Nova preset), Geist font |
+| Styling | Tailwind CSS 4 + shadcn/ui (Nova preset); Newsreader + Jost + Geist Mono |
 | Icons | Lucide (`lucide-react`) |
 | Command palette | `cmdk` (via shadcn `command` + `dialog`) |
 | Theming | `next-themes` |

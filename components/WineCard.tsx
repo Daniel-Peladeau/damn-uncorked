@@ -18,7 +18,7 @@ export function WineCard({ wine, isClickable = true }: WineCardProps) {
           </p>
         </div>
         <div className="rounded bg-primary/10 px-2 py-1">
-          <span className="text-xs font-medium text-primary capitalize">
+          <span className="text-xs font-medium text-gold-text capitalize">
             {wine.type}
           </span>
         </div>

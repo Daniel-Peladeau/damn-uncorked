@@ -26,7 +26,7 @@ function NavTab({ item, active }: { item: NavItem; active: boolean }) {
     <Link
       href={item.href}
       aria-current={active ? 'page' : undefined}
-      className={cn(tabClass, active ? 'text-primary' : 'text-muted-foreground hover:text-foreground')}
+      className={cn(tabClass, active ? 'text-gold-text' : 'text-muted-foreground hover:text-foreground')}
     >
       <span className={iconSlotClass}>
         <Icon className="h-5 w-5" />
@@ -55,7 +55,7 @@ export function BottomNav({ currentPath, userEmail, displayName }: BottomNavProp
         <Link
           href={addWineHref}
           aria-current={addActive ? 'page' : undefined}
-          className={cn(tabClass, addActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground')}
+          className={cn(tabClass, addActive ? 'text-gold-text' : 'text-muted-foreground hover:text-foreground')}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
             <Plus className="h-5 w-5" />
@@ -70,7 +70,7 @@ export function BottomNav({ currentPath, userEmail, displayName }: BottomNavProp
             className={cn(
               tabClass,
               isNavActive(currentPath, aboutNavItem.href) || isNavActive(currentPath, profileNavItem.href)
-                ? 'text-primary'
+                ? 'text-gold-text'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >

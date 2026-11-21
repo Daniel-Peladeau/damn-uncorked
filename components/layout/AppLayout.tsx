@@ -30,8 +30,8 @@ export function AppLayout({ children, userEmail, displayName }: AppLayoutProps) 
           {/* Top bar */}
           <TopBar currentPath={pathname} onOpenSearch={() => setPaletteOpen(true)} />
 
-          {/* Scrollable content — bottom padding on mobile clears the fixed BottomNav */}
-          <main className="flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+          {/* Scrollable content — bottom padding (and scroll padding, so focused fields scroll clear) on mobile clears the fixed BottomNav */}
+          <main className="flex-1 overflow-y-auto pb-[calc(4rem+env(safe-area-inset-bottom))] scroll-pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0 md:scroll-pb-0">
             <div className="container mx-auto p-6">
               {children}
             </div>
