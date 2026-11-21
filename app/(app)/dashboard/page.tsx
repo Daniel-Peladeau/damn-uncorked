@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/PageHeader'
 import { WineCard } from '@/components/WineCard'
 import { getWinesForUser } from '@/lib/supabase/queries'
-import { Plus } from 'lucide-react'
+import { Plus, Star } from 'lucide-react'
+import { EmptyState } from '@/components/EmptyState'
 
 export default async function Dashboard() {
   const { wines } = await getWinesForUser()
@@ -49,18 +50,21 @@ export default async function Dashboard() {
           Your Top Wines
         </h2>
         {topWines.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card p-12 text-center">
-            <h3 className="mb-4 text-xl font-semibold text-foreground">No rated wines yet</h3>
-            <p className="mb-6 text-muted-foreground">
-              Log your first bottle to start seeing it here.
-            </p>
-            <Link href="/wines/new">
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Wine
-              </Button>
-            </Link>
-          </div>
+          <EmptyState
+            icon={Star}
+            title="No rated wines yet"
+            headingLevel="h3"
+            action={
+              <Link href="/wines/new">
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Wine
+                </Button>
+              </Link>
+            }
+          >
+            Your three highest-rated bottles show up here once you&apos;ve scored a wine.
+          </EmptyState>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {topWines.map((wine) => (

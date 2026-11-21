@@ -58,9 +58,15 @@ export function RatingPips({
               >
                 {n}
               </span>
+              <span aria-hidden="true" className="absolute inset-x-0.5 bottom-0 h-px bg-input" />
+              {/* Transform-only so the fill can animate without layout work;
+                  motion-safe: leaves it instant under reduced motion. */}
               <span
                 aria-hidden="true"
-                className={cn('absolute inset-x-0.5 bottom-0', filled ? 'h-[3px] bg-gold' : 'h-px bg-input')}
+                className={cn(
+                  'absolute inset-x-0.5 bottom-0 h-[3px] origin-bottom bg-gold motion-safe:transition-transform motion-safe:duration-200 motion-safe:ease-out',
+                  filled ? 'scale-y-100' : 'scale-y-0'
+                )}
               />
             </label>
           )

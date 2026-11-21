@@ -9,7 +9,8 @@ import { FilterChips } from '@/components/FilterChips'
 import { getWinesForUser } from '@/lib/supabase/queries'
 import { isSortOption } from '@/lib/types/sort'
 import { hasActiveFilters, parseWineFilters, type WineFilterParams } from '@/lib/types/filters'
-import { Plus } from 'lucide-react'
+import { Plus, Wine } from 'lucide-react'
+import { EmptyState } from '@/components/EmptyState'
 
 interface WinesPageProps {
   searchParams: Promise<{ sort?: string; q?: string } & WineFilterParams>
@@ -61,18 +62,20 @@ export default async function WinesPage({ searchParams }: WinesPageProps) {
       </div>
 
       {totalCount === 0 ? (
-        <div className="rounded-lg border border-border bg-card p-12 text-center">
-          <h2 className="mb-4 text-xl font-semibold text-foreground">No wines logged yet</h2>
-          <p className="mb-6 text-muted-foreground">
-            Start building your collection by logging the first bottle.
-          </p>
-          <Link href="/wines/new">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Wine
-            </Button>
-          </Link>
-        </div>
+        <EmptyState
+          icon={Wine}
+          title="The cellar is empty"
+          action={
+            <Link href="/wines/new">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Wine
+              </Button>
+            </Link>
+          }
+        >
+          Log the next bottle you open together and your collection starts here.
+        </EmptyState>
       ) : wines.length === 0 ? (
         <p className="text-muted-foreground">
           {q ? <>No wines match &quot;{q}&quot;</> : 'No wines match'}

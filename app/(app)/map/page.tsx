@@ -1,3 +1,7 @@
+import Link from 'next/link'
+import { MapPin, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/EmptyState'
 import { PageHeader } from '@/components/PageHeader'
 import { WineryMapLoader } from '@/components/WineryMapLoader'
 import { getWineriesWithLocations } from '@/lib/supabase/wineries'
@@ -10,12 +14,20 @@ export default async function MapPage() {
       <PageHeader title="Winery Map" description="Explore your wineries geographically" />
 
       {wineries.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card p-12 text-center">
-          <h2 className="mb-4 text-xl font-semibold text-foreground">No wineries plotted yet</h2>
-          <p className="text-muted-foreground">
-            Once you log a wine, its winery is geocoded automatically and will show up here.
-          </p>
-        </div>
+        <EmptyState
+          icon={MapPin}
+          title="No wineries on the map yet"
+          action={
+            <Link href="/wines/new">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Wine
+              </Button>
+            </Link>
+          }
+        >
+          Each winery is placed automatically when you log a wine from it.
+        </EmptyState>
       ) : (
         <WineryMapLoader wineries={wineries} />
       )}
