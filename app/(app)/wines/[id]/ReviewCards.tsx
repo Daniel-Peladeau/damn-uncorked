@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { DeleteReviewButton } from './DeleteControls'
 import { RatingBreakdown } from './RatingBreakdown'
-import { RATING_CATEGORIES, average, type Review } from './rating'
+import type { Review } from './rating'
 
 export function PromptReviewCard({ vintageId, className }: { vintageId: string; className?: string }) {
   return (
@@ -82,21 +82,17 @@ export function ReviewCard({
   )
 }
 
-// Combined score is computed, not stored (per CLAUDE.md) — this only ever
-// renders once both reviews exist, so `reviews` is always exactly the two
-// rows in practice, but the averaging itself works for any count.
-export function CombinedRatingCard({ reviews }: { reviews: Review[] }) {
-  const combinedByKey = new Map(
-    RATING_CATEGORIES.map(({ key }) => [key, average(reviews.map((r) => r[key] ?? 0))])
-  )
-
+// Shown beside your own review until the other person logs theirs; the
+// side-by-side comparison takes over once both exist.
+export function WaitingReviewCard({ className }: { className?: string }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-6">
-      <h2 className="mb-4 text-lg font-semibold text-foreground">Combined Rating</h2>
-      <RatingBreakdown
-        overall={average(reviews.map((r) => r.overall ?? 0))}
-        categoryValue={(key) => combinedByKey.get(key) ?? null}
-      />
+    <div
+      className={`flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border p-6 text-center ${className ?? ''}`}
+    >
+      <p className="font-heading text-lg text-foreground">No second review yet</p>
+      <p className="max-w-xs text-sm text-muted-foreground">
+        Once you&apos;ve both rated this bottle, your scores appear side by side here.
+      </p>
     </div>
   )
 }
