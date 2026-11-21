@@ -15,7 +15,7 @@ export default async function Home() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="flex items-center justify-between px-6 py-6 sm:px-10">
         <div className="flex items-center gap-2">
-          <Wine className="h-6 w-6 text-primary" aria-hidden="true" />
+          <Wine className="h-6 w-6 text-gold" aria-hidden="true" />
           <span className="text-lg font-bold text-foreground">DamnUncorked</span>
         </div>
         <Button asChild>
@@ -37,21 +37,21 @@ export default async function Home() {
 
         <div className="mt-20 grid w-full max-w-3xl gap-6 sm:grid-cols-3">
           <div className="rounded-lg border border-border bg-card p-8 text-left">
-            <Star className="h-6 w-6 text-primary" aria-hidden="true" />
+            <Star className="h-6 w-6 text-gold" aria-hidden="true" />
             <h2 className="mt-4 font-semibold text-foreground">Rate every bottle</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Score appearance, nose, palate, finish, and value on your own terms.
             </p>
           </div>
           <div className="rounded-lg border border-border bg-card p-8 text-left">
-            <Wine className="h-6 w-6 text-primary" aria-hidden="true" />
+            <Wine className="h-6 w-6 text-gold" aria-hidden="true" />
             <h2 className="mt-4 font-semibold text-foreground">Build your log</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Keep tasting notes, food pairings, and photos for every wine you try.
             </p>
           </div>
           <div className="rounded-lg border border-border bg-card p-8 text-left">
-            <MapPin className="h-6 w-6 text-primary" aria-hidden="true" />
+            <MapPin className="h-6 w-6 text-gold" aria-hidden="true" />
             <h2 className="mt-4 font-semibold text-foreground">Explore wineries</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               See every winery you&apos;ve discovered plotted on a map.

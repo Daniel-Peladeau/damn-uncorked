@@ -48,7 +48,7 @@ export function WineryMap({ wineries }: { wineries: WineryPin[] }) {
                 <ul className="mt-2 space-y-1 text-sm">
                   {winery.wines.map((wine) => (
                     <li key={wine.vintageId}>
-                      <Link href={`/wines/${wine.vintageId}`} className="text-primary underline">
+                      <Link href={`/wines/${wine.vintageId}`} className="text-gold-text underline">
                         {wine.label}
                       </Link>
                     </li>

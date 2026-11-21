@@ -21,7 +21,7 @@ export function Sidebar({ currentPath, userEmail, displayName }: SidebarProps) {
     <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-card md:flex">
       {/* Logo/Brand */}
       <div className="p-6 border-b border-border">
-        <h1 className="text-xl font-bold text-foreground">DamnUncorked</h1>
+        <h1 className="text-2xl font-medium italic text-foreground">DamnUncorked</h1>
         <p className="text-xs text-muted-foreground mt-1">Wine Logger</p>
       </div>
 
