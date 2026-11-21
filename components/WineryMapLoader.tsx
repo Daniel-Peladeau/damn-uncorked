@@ -9,7 +9,7 @@ import type { WineryPin } from '@/lib/supabase/wineries'
 const WineryMap = dynamic(() => import('@/components/WineryMap').then((mod) => mod.WineryMap), {
   ssr: false,
   loading: () => (
-    <div className="flex h-96 items-center justify-center rounded-lg bg-secondary/20">
+    <div className="flex h-96 items-center justify-center rounded-lg bg-secondary">
       <p className="text-muted-foreground">Loading map…</p>
     </div>
   ),

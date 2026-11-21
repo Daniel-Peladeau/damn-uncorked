@@ -15,9 +15,9 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  // Label photos go through /_next/image (self); map tiles and marker icons
-  // load straight from OSM and unpkg (see components/WineryMap.tsx).
-  "img-src 'self' data: blob: https://tile.openstreetmap.org https://unpkg.com",
+  // Label photos go through /_next/image (self); map tiles load straight
+  // from OSM. Markers are inline HTML (see components/WineryMap.tsx).
+  "img-src 'self' data: blob: https://tile.openstreetmap.org",
   "font-src 'self'",
   `connect-src 'self' ${supabaseOrigin}`.trim(),
   "frame-ancestors 'none'",

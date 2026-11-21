@@ -190,16 +190,72 @@
     @apply font-heading;
   }
 }
+/* Dark mode keeps the OSM tiles but inverts them and rotates the hue back,
+   so water stays blue-ish and land goes dark; the slight sepia warms the
+   greys toward the charcoal page. Markers, popups and controls sit outside
+   the tile pane and are themed with tokens instead. */
+.dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) sepia(0.2) brightness(0.85) contrast(0.9);
+}
+div.leaflet-container {
+  background: var(--secondary);
+  font-family: var(--font-sans);
+}
+/* Doubled-up selectors: leaflet.css loads after this file (it's imported by
+   the lazily loaded map chunk), so equal specificity would lose. */
+.leaflet-marker-icon.winery-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 2px solid var(--background);
+  background: var(--gold-fill);
+  color: var(--primary-foreground); /* text-on-gold token, >= 7.69:1 */
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.35);
+}
+.leaflet-marker-icon.winery-marker:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.leaflet-container .leaflet-control-attribution.leaflet-control {
+  background: color-mix(in oklch, var(--card) 85%, transparent);
+  color: var(--muted-foreground);
+}
+.leaflet-container .leaflet-control-attribution a {
+  color: var(--gold-text);
+}
+.leaflet-container .leaflet-bar a {
+  background: var(--card);
+  color: var(--foreground);
+  border-bottom-color: var(--border);
+}
+.leaflet-container .leaflet-bar a:hover {
+  background: var(--accent);
+}
 /* Leaflet popups default to a white card; use theme tokens so they flip in dark mode */
-.leaflet-popup-content-wrapper,
-.leaflet-popup-tip {
+.leaflet-container .leaflet-popup-content-wrapper,
+.leaflet-container .leaflet-popup-tip {
   background: var(--popover);
   color: var(--popover-foreground);
 }
-.leaflet-container a.leaflet-popup-close-button {
+.leaflet-container .leaflet-popup a.leaflet-popup-close-button {
   color: var(--muted-foreground);
 }
 /* Beats Leaflet's unlayered `.leaflet-container a` blue, which outranks utility classes */
 .leaflet-container .leaflet-popup-content a {
   color: var(--gold-text);
+}
+
+/* Belt and braces for prefers-reduced-motion: Tailwind's motion-safe: gates
+   our own transitions, this also stills tw-animate-css dialog/menu motion and
+   Leaflet's zoom/pan animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
