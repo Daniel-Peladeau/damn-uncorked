@@ -6,6 +6,7 @@ import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { WINE_TYPES, type WineType } from '@/lib/types/wine'
+import { WINE_TYPE_STYLES } from '@/components/wine-type-styles'
 import { REVIEW_STATUSES, hasActiveFilters, type ReviewStatus, type WineFilters } from '@/lib/types/filters'
 
 const STATUS_LABELS: Record<ReviewStatus, string> = {
@@ -88,16 +89,15 @@ export function FilterChips({ filters: serverFilters, loggedTypes }: FilterChips
 
   return (
     <div role="group" aria-label="Filter wines" className="flex flex-wrap items-center gap-2">
-      {visibleTypes.map((type) => (
-        <Chip
-          key={type}
-          pressed={filters.types.includes(type)}
-          onClick={() => toggleType(type)}
-          className="capitalize"
-        >
-          {type}
-        </Chip>
-      ))}
+      {visibleTypes.map((type) => {
+        const { label, icon: Icon } = WINE_TYPE_STYLES[type]
+        return (
+          <Chip key={type} pressed={filters.types.includes(type)} onClick={() => toggleType(type)}>
+            <Icon aria-hidden="true" />
+            {label}
+          </Chip>
+        )
+      })}
       <Chip pressed={filters.buyAgain} onClick={() => navigate({ ...filters, buyAgain: !filters.buyAgain })}>
         Would buy again
       </Chip>
