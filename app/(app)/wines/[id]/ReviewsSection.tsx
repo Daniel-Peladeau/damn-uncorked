@@ -1,4 +1,5 @@
-import { CombinedRatingCard, PromptReviewCard, ReviewCard } from './ReviewCards'
+import { PromptReviewCard, ReviewCard, WaitingReviewCard } from './ReviewCards'
+import { ReviewComparison } from './ReviewComparison'
 import type { Review } from './rating'
 
 // Side by side so both users' independent reviews of the same bottle are
@@ -25,17 +26,18 @@ export function ReviewsSection({
   })
 
   const hasOwnReview = allReviews.some((review) => review.user_id === userId)
-  // A lone real review card only spans the full grid width when it's the
-  // only card rendered at all — once the "add your review" prompt joins it
-  // as a second grid item, both should sit at normal half-width.
-  const isLoneCard = allReviews.length === 1 && hasOwnReview
+  const nameOf = (review: Review) =>
+    review.user_id === userId ? 'You' : (reviewerNames.get(review.user_id) ?? 'Them')
+  const [first, second] = allReviews
 
   return (
     <>
-      {/* Combined score is computed here for display only — per CLAUDE.md,
-          it's never persisted, so it's recomputed from the two reviews on
-          every render rather than read from a stored column. */}
-      {allReviews.length === 2 && <CombinedRatingCard reviews={allReviews} />}
+      {first && second && (
+        <ReviewComparison
+          first={{ name: nameOf(first), review: first }}
+          second={{ name: nameOf(second), review: second }}
+        />
+      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         {allReviews.map((review) => (
@@ -45,9 +47,9 @@ export function ReviewsSection({
             isOwnReview={review.user_id === userId}
             reviewerName={reviewerNames.get(review.user_id) ?? null}
             vintageId={vintageId}
-            className={isLoneCard ? 'md:col-span-2' : undefined}
           />
         ))}
+        {allReviews.length === 1 && hasOwnReview && <WaitingReviewCard />}
         {!hasOwnReview && (
           <PromptReviewCard vintageId={vintageId} className={allReviews.length === 0 ? 'md:col-span-2' : undefined} />
         )}
