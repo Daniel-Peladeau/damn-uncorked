@@ -42,6 +42,18 @@
   --color-gold: var(--gold);
   --color-gold-fill: var(--gold-fill);
   --color-gold-text: var(--gold-text);
+  --color-wine-white: var(--wine-white);
+  --color-wine-white-foreground: var(--wine-white-foreground);
+  --color-wine-rose: var(--wine-rose);
+  --color-wine-rose-foreground: var(--wine-rose-foreground);
+  --color-wine-sparkling: var(--wine-sparkling);
+  --color-wine-sparkling-foreground: var(--wine-sparkling-foreground);
+  --color-wine-red: var(--wine-red);
+  --color-wine-red-foreground: var(--wine-red-foreground);
+  --color-wine-dessert: var(--wine-dessert);
+  --color-wine-dessert-foreground: var(--wine-dessert-foreground);
+  --color-wine-fortified: var(--wine-fortified);
+  --color-wine-fortified-foreground: var(--wine-fortified-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -82,6 +94,21 @@
   --gold: oklch(0.597 0.091 82.7); /* #9A7A3A */
   --gold-fill: oklch(0.749 0.090 83.5); /* #C9A96A */
   --gold-text: oklch(0.513 0.079 81.3); /* #7E622D */
+  /* Wine-type fills for the label tile and type badge only, always paired with
+     an icon and the type name (several hues sit close together). Text on each
+     is >= 4.96:1. */
+  --wine-white: oklch(0.902 0.077 101.3); /* #E9E1A6 straw */
+  --wine-white-foreground: oklch(0.223 0.010 53);
+  --wine-rose: oklch(0.873 0.049 38.8); /* #F3CBBE salmon */
+  --wine-rose-foreground: oklch(0.223 0.010 53);
+  --wine-sparkling: oklch(0.920 0.034 88.1); /* #EEE4CC champagne */
+  --wine-sparkling-foreground: oklch(0.223 0.010 53);
+  --wine-red: oklch(0.402 0.117 11.3); /* #7A2638 claret */
+  --wine-red-foreground: oklch(0.974 0.011 84.6);
+  --wine-dessert: oklch(0.851 0.089 82.4); /* #EBC98A amber */
+  --wine-dessert-foreground: oklch(0.223 0.010 53);
+  --wine-fortified: oklch(0.536 0.102 49.8); /* #9C5A33 tawny */
+  --wine-fortified-foreground: oklch(0.974 0.011 84.6);
   --chart-1: oklch(0.597 0.091 82.7);
   --chart-2: oklch(0.468 0.152 24.9);
   --chart-3: oklch(0.502 0.017 64.1);
@@ -120,6 +147,18 @@
   --gold: oklch(0.749 0.090 83.5);
   --gold-fill: oklch(0.749 0.090 83.5);
   --gold-text: oklch(0.749 0.090 83.5);
+  --wine-white: oklch(0.385 0.048 98.6); /* #4A4425 */
+  --wine-white-foreground: oklch(0.933 0.018 81.3);
+  --wine-rose: oklch(0.373 0.054 28.2); /* #5A3530 */
+  --wine-rose-foreground: oklch(0.933 0.018 81.3);
+  --wine-sparkling: oklch(0.362 0.023 86.1); /* #433D30 */
+  --wine-sparkling-foreground: oklch(0.933 0.018 81.3);
+  --wine-red: oklch(0.337 0.090 10.3); /* #5C1F2C */
+  --wine-red-foreground: oklch(0.933 0.018 81.3);
+  --wine-dessert: oklch(0.400 0.060 76.1); /* #5A4320 */
+  --wine-dessert-foreground: oklch(0.933 0.018 81.3);
+  --wine-fortified: oklch(0.353 0.061 48.9); /* #55311D */
+  --wine-fortified-foreground: oklch(0.933 0.018 81.3);
   --chart-1: oklch(0.749 0.090 83.5);
   --chart-2: oklch(0.691 0.129 27.3);
   --chart-3: oklch(0.716 0.023 69.7);

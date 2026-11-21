@@ -3,25 +3,25 @@ import { Skeleton } from '@/components/ui/skeleton'
 // Mirrors WineCard's layout so the loading -> loaded transition doesn't jump.
 export function WineCardSkeleton() {
   return (
-    <div className="rounded-lg border border-border bg-card p-6">
-      <div className="mb-4 flex items-start justify-between">
-        <div className="space-y-2">
+    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card">
+      <div className="h-0.5 bg-gold-fill" />
+
+      <div className="flex flex-1 gap-4 p-5">
+        <Skeleton className="aspect-[3/4] w-20 shrink-0" />
+
+        <div className="min-w-0 flex-1 space-y-2">
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-5 w-16 rounded-full" />
         </div>
-        <Skeleton className="h-5 w-14 rounded" />
+
+        <Skeleton className="h-8 w-10 shrink-0" />
       </div>
 
-      <div className="mb-4 space-y-2">
-        <Skeleton className="h-3 w-28" />
-        <div className="flex gap-1">
-          <Skeleton className="h-5 w-16 rounded" />
-          <Skeleton className="h-5 w-16 rounded" />
-        </div>
+      <div className="border-t border-border px-5 py-3">
+        <Skeleton className="h-4 w-full" />
       </div>
-
-      <Skeleton className="mb-4 h-4 w-20" />
-      <Skeleton className="h-4 w-full" />
     </div>
   )
 }

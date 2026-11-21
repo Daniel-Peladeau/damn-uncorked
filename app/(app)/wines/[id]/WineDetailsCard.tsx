@@ -2,6 +2,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { WineTypeBadge } from '@/components/WineTypeBadge'
+import { WINE_TYPES } from '@/lib/types/wine'
 
 export function WineDetailsCard({
   vintageId,
@@ -20,6 +22,9 @@ export function WineDetailsCard({
   country: string | null
   grapes: string[]
 }) {
+  // wineType arrives as the raw column string; fall back to plain text if it
+  // is ever outside the enum rather than crash the badge lookup.
+  const knownType = WINE_TYPES.find((t) => t === wineType)
   return (
     <div className="rounded-lg border border-border bg-card p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -67,7 +72,11 @@ export function WineDetailsCard({
           )}
           <div>
             <p className="text-sm text-muted-foreground mb-2">Type</p>
-            <p className="capitalize font-medium text-foreground">{wineType}</p>
+            {knownType ? (
+              <WineTypeBadge type={knownType} className="text-sm" />
+            ) : (
+              <p className="capitalize font-medium text-foreground">{wineType}</p>
+            )}
           </div>
         </div>
       </div>
