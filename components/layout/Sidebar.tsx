@@ -28,15 +28,17 @@ export function Sidebar({ currentPath, userEmail, displayName }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
         {navItems.map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href}>
-            <Button
-              variant={isNavActive(currentPath, href) ? 'default' : 'ghost'}
-              className="w-full justify-start"
-            >
+          <Button
+            key={href}
+            variant={isNavActive(currentPath, href) ? 'default' : 'ghost'}
+            className="w-full justify-start"
+            asChild
+          >
+            <Link href={href}>
               <Icon className="mr-2 h-4 w-4" />
               {label}
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         ))}
       </nav>
 

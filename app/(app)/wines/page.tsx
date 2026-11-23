@@ -42,12 +42,12 @@ export default async function WinesPage({ searchParams }: WinesPageProps) {
         action={
           <div className="flex items-center gap-3">
             <SortControl currentSort={sortBy} />
-            <Link href="/wines/new">
-              <Button size="lg" className="gap-2">
+            <Button size="lg" className="gap-2" asChild>
+              <Link href="/wines/new">
                 <Plus className="h-4 w-4" />
                 Add Wine
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         }
       />
@@ -66,12 +66,12 @@ export default async function WinesPage({ searchParams }: WinesPageProps) {
           icon={Wine}
           title="The cellar is empty"
           action={
-            <Link href="/wines/new">
-              <Button className="gap-2">
+            <Button className="gap-2" asChild>
+              <Link href="/wines/new">
                 <Plus className="h-4 w-4" />
                 Add Wine
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           }
         >
           Log the next bottle you open together and your collection starts here.

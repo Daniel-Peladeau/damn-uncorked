@@ -92,12 +92,12 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
 
       {/* The TopBar breadcrumb covers this on desktop; on mobile it's the
           bigger tap target, so it stays there. */}
-      <Link href="/wines" className="md:hidden">
-        <Button variant="ghost" className="gap-2">
+      <Button variant="ghost" className="md:hidden gap-2" asChild>
+        <Link href="/wines">
           <ArrowLeft className="h-4 w-4" />
           Back to Wines
-        </Button>
-      </Link>
+        </Link>
+      </Button>
 
       <PageHeader
         title={wine.name}

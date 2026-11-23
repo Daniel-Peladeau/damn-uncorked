@@ -18,12 +18,12 @@ export default async function MapPage() {
           icon={MapPin}
           title="No wineries on the map yet"
           action={
-            <Link href="/wines/new">
-              <Button className="gap-2">
+            <Button className="gap-2" asChild>
+              <Link href="/wines/new">
                 <Plus className="h-4 w-4" />
                 Add Wine
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           }
         >
           Each winery is placed automatically when you log a wine from it.

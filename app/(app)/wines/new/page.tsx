@@ -38,12 +38,12 @@ export default function AddWinePage() {
     <div className="space-y-8">
       {/* The TopBar breadcrumb covers this on desktop; on mobile it's the
           bigger tap target, so it stays there. */}
-      <Link href="/wines" className="md:hidden">
-        <Button variant="ghost" className="gap-2">
+      <Button variant="ghost" className="md:hidden gap-2" asChild>
+        <Link href="/wines">
           <ArrowLeft className="h-4 w-4" />
           Back to Wines
-        </Button>
-      </Link>
+        </Link>
+      </Button>
 
       <PageHeader
         title="Add a New Wine"
@@ -117,11 +117,11 @@ export default function AddWinePage() {
           <ReviewNotesFields />
 
           <div className="flex gap-4 border-t border-border pt-6">
-            <Link href="/wines" className="flex-1">
-              <Button variant="outline" className="w-full" type="button">
+            <Button variant="outline" className="flex-1" asChild>
+              <Link href="/wines">
                 Cancel
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <SaveWineButton />
           </div>
         </form>

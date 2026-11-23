@@ -29,11 +29,11 @@ export function WineDetailsCard({
     <div className="rounded-lg border border-border bg-card p-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">Wine Details</h2>
-        <Link href={`/wines/${vintageId}/edit`}>
-          <Button variant="ghost" size="sm">
+        <Button variant="ghost" size="sm" asChild>
+          <Link href={`/wines/${vintageId}/edit`}>
             Edit
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
       <div className="flex gap-6">
         {labelImageUrl && (
