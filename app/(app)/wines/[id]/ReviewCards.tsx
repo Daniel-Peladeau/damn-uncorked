@@ -10,9 +10,9 @@ export function PromptReviewCard({ vintageId, className }: { vintageId: string; 
       className={`flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card p-6 text-center ${className ?? ''}`}
     >
       <p className="text-muted-foreground">You haven&apos;t reviewed this wine yet.</p>
-      <Link href={`/wines/${vintageId}/review`}>
-        <Button size="sm">Add Your Review</Button>
-      </Link>
+      <Button size="sm" asChild>
+        <Link href={`/wines/${vintageId}/review`}>Add Your Review</Link>
+      </Button>
     </div>
   )
 }
@@ -39,11 +39,11 @@ export function ReviewCard({
         <h2 className="text-lg font-semibold text-foreground">{title}</h2>
         {isOwnReview && (
           <div className="flex items-center gap-1">
-            <Link href={`/wines/${vintageId}/review`}>
-              <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/wines/${vintageId}/review`}>
                 Edit
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <DeleteReviewButton vintageId={vintageId} reviewId={review.id} />
           </div>
         )}

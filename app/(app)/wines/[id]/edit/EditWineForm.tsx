@@ -49,12 +49,12 @@ export function EditWineForm({
     <div className="space-y-8">
       {/* The TopBar breadcrumb covers this on desktop; on mobile it's the
           bigger tap target, so it stays there. */}
-      <Link href={backHref} className="md:hidden">
-        <Button variant="ghost" className="gap-2">
+      <Button variant="ghost" className="md:hidden gap-2" asChild>
+        <Link href={backHref}>
           <ArrowLeft className="h-4 w-4" />
           Back to Wine
-        </Button>
-      </Link>
+        </Link>
+      </Button>
 
       <PageHeader title="Edit Wine Details" description={initialValues.name} />
 
@@ -108,11 +108,11 @@ export function EditWineForm({
           </div>
 
           <div className="flex gap-4 border-t border-border pt-6">
-            <Link href={backHref} className="flex-1">
-              <Button variant="outline" className="w-full" type="button">
+            <Button variant="outline" className="flex-1" asChild>
+              <Link href={backHref}>
                 Cancel
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <SaveButton />
           </div>
         </form>

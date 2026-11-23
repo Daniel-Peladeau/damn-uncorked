@@ -35,12 +35,12 @@ export default async function Dashboard() {
         title="Welcome back!"
         description="Here's a snapshot of your wine collection"
         action={
-          <Link href="/wines/new">
-            <Button size="lg" className="gap-2">
+          <Button size="lg" className="gap-2" asChild>
+            <Link href="/wines/new">
               <Plus className="h-4 w-4" />
               Add Wine
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         }
       />
 
@@ -55,12 +55,12 @@ export default async function Dashboard() {
             title="No rated wines yet"
             headingLevel="h3"
             action={
-              <Link href="/wines/new">
-                <Button className="gap-2">
+              <Button className="gap-2" asChild>
+                <Link href="/wines/new">
                   <Plus className="h-4 w-4" />
                   Add Wine
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             }
           >
             Your three highest-rated bottles show up here once you&apos;ve scored a wine.
@@ -91,9 +91,9 @@ export default async function Dashboard() {
             loved (or didn&apos;t).
           </p>
           <div className="pt-4">
-            <Link href="/about">
-              <Button variant="outline">Learn More</Button>
-            </Link>
+            <Button variant="outline" asChild>
+              <Link href="/about">Learn More</Link>
+            </Button>
           </div>
         </div>
       </div>
