@@ -42,7 +42,7 @@ export default async function WinesPage({ searchParams }: WinesPageProps) {
         action={
           <div className="flex items-center gap-3">
             <SortControl currentSort={sortBy} />
-            <Button size="lg" className="gap-2" asChild>
+            <Button size="lg" className="hidden gap-2 md:inline-flex" asChild>
               <Link href="/wines/new">
                 <Plus className="h-4 w-4" />
                 Add Wine
