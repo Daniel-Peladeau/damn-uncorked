@@ -27,19 +27,22 @@ export function Sidebar({ currentPath, userEmail, displayName }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
-        {navItems.map(({ href, label, icon: Icon }) => (
-          <Button
-            key={href}
-            variant={isNavActive(currentPath, href) ? 'default' : 'ghost'}
-            className="w-full justify-start"
-            asChild
-          >
-            <Link href={href}>
-              <Icon className="mr-2 h-4 w-4" />
-              {label}
-            </Link>
-          </Button>
-        ))}
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const active = isNavActive(currentPath, href)
+          return (
+            <Button
+              key={href}
+              variant={active ? 'default' : 'ghost'}
+              className="w-full justify-start"
+              asChild
+            >
+              <Link href={href} aria-current={active ? 'page' : undefined}>
+                <Icon className="mr-2 h-4 w-4" />
+                {label}
+              </Link>
+            </Button>
+          )
+        })}
       </nav>
 
       {/* Footer — account menu */}

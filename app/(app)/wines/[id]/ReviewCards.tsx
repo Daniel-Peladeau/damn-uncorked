@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Check, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DeleteReviewButton } from './DeleteControls'
 import { RatingBreakdown } from './RatingBreakdown'
@@ -75,7 +76,14 @@ export function ReviewCard({
       {review.would_buy_again !== null && (
         <div className="mt-4">
           <p className="text-sm text-muted-foreground">Would Buy Again</p>
-          <p className="mt-1 font-semibold text-foreground">{review.would_buy_again ? '✓ Yes' : '✗ No'}</p>
+          <p className="mt-1 flex items-center gap-1.5 font-semibold text-foreground">
+            {review.would_buy_again ? (
+              <Check className="h-4 w-4 text-gold" aria-hidden="true" />
+            ) : (
+              <X className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            )}
+            {review.would_buy_again ? 'Yes' : 'No'}
+          </p>
         </div>
       )}
     </div>

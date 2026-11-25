@@ -47,12 +47,10 @@ export function ReviewNotesFields({ defaults }: { defaults?: ReviewNotesDefaults
         />
       </div>
 
-      <div className="flex items-center gap-2">
+      <Label htmlFor="wouldBuyAgain" className="min-h-11 w-fit cursor-pointer gap-3 font-normal">
         <Checkbox id="wouldBuyAgain" name="wouldBuyAgain" defaultChecked={defaults?.would_buy_again ?? false} />
-        <Label htmlFor="wouldBuyAgain" className="cursor-pointer font-normal">
-          Would buy again
-        </Label>
-      </div>
+        Would buy again
+      </Label>
     </>
   )
 }

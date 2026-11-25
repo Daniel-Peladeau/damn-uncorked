@@ -51,8 +51,8 @@ export function WineSearch({ initialQuery }: { initialQuery: string }) {
         type="search"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Search by name, winery, region, grape, or type…"
-        aria-label="Search wines"
+        placeholder="Search wines…"
+        aria-label="Search wines by name, winery, region, grape, or type"
         className="pl-8"
       />
     </div>

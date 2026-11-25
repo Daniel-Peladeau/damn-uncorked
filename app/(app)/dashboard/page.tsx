@@ -35,7 +35,7 @@ export default async function Dashboard() {
         title="Welcome back!"
         description="Here's a snapshot of your wine collection"
         action={
-          <Button size="lg" className="gap-2" asChild>
+          <Button size="lg" className="hidden gap-2 md:inline-flex" asChild>
             <Link href="/wines/new">
               <Plus className="h-4 w-4" />
               Add Wine
