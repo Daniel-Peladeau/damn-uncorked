@@ -82,9 +82,9 @@ Check boxes as items are completed. Claude Code reads this file at the start of 
 ---
 
 ## Phase 6 — Polish & Deploy
-- [ ] Research a more modern, inviting visual design direction — current UI is plain black/white/grayscale (GitHub issue #50)
+- [x] Visual design refresh — "Cellar Journal" theme, shipped in phased PRs #122–#128 (GitHub issues #50, #120)
 - [x] Build public landing page at `/` (GitHub issue #11)
-- [ ] Mobile testing pass — all pages, sidebar, forms (GitHub issue #45)
+- [ ] Mobile testing pass — browser QA at phone width done (#126, #128); remaining: real-device check, empty states on wine list + map, reduced-motion behaviour (GitHub issue #45)
 - [x] Empty states — what shows when no wines are logged yet (GitHub issue #46)
 - [x] Loading states — skeletons while Supabase data fetches (GitHub issue #47)
 - [x] Error boundaries — graceful fallback if a page fetch fails (GitHub issue #48)
